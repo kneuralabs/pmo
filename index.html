@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title id="doc-title">NEXUS — Project Governance</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ── COMPANY CONFIG TOKENS (override to rebrand) ── */
+:root{
+  --ink:#0a0c10;--paper:#f4f1eb;--steel:#1a1f2e;
+  --accent:#e8440a;--accent-h:#c93a08;
+  --gold:#c9a84c;--mist:#8b9ab1;--card:#ffffff;--border:#ddd9d0;
+  --green:#2d9e5a;--blue:#3b6ef5;--purple:#7c3aed;
+  --r:8px;--shadow:0 2px 20px rgba(0,0,0,.08);--shadow-lg:0 8px 40px rgba(0,0,0,.14);
+  --ease:cubic-bezier(.16,1,.3,1);
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'DM Mono',monospace;background:var(--paper);color:var(--ink);min-height:100vh;overflow-x:hidden}
+
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--steel);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s var(--ease)}
+#loader.out{opacity:0;pointer-events:none}
+.ld-logo{font-family:'Inter',sans-serif;font-weight:800;font-size:clamp(2rem,6vw,4rem);color:#fff;letter-spacing:-.03em}
+.ld-logo span{color:var(--accent)}
+.ld-bar{width:200px;height:2px;background:rgba(255,255,255,.1);margin-top:24px;border-radius:2px;overflow:hidden}
+.ld-fill{width:0;height:100%;background:var(--accent);animation:ldFill 1.4s var(--ease) forwards}
+.ld-sub{color:#8b9ab1;font-size:.65rem;margin-top:12px;letter-spacing:.12em;text-transform:uppercase}
+@keyframes ldFill{to{width:100%}}
+
+/* LAYOUT */
+#app{display:grid;grid-template-columns:260px 1fr;min-height:100vh;opacity:0;transform:translateY(8px);transition:opacity .5s .3s var(--ease),transform .5s .3s var(--ease)}
+#app.show{opacity:1;transform:none}
+
+/* SIDEBAR */
+aside{background:var(--steel);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;scrollbar-width:none}
+aside::-webkit-scrollbar{display:none}
+.logo{padding:calc(28px + var(--safe-top)) 24px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.logo h1{font-family:'Inter',sans-serif;font-weight:800;font-size:1.4rem;letter-spacing:-.02em}
+.logo h1 span{color:var(--accent)}
+.logo p{font-size:.65rem;color:var(--mist);margin-top:4px;letter-spacing:.08em;text-transform:uppercase}
+nav{padding:20px 12px;flex:1}
+.nav-section{font-size:.6rem;color:var(--mist);letter-spacing:.12em;text-transform:uppercase;padding:0 12px;margin:16px 0 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;cursor:pointer;font-size:.78rem;color:rgba(255,255,255,.7);transition:all .2s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-item.active{background:var(--accent);color:#fff}
+.nav-item svg{width:15px;height:15px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:rgba(255,255,255,.15);font-size:.6rem;padding:2px 7px;border-radius:20px;min-width:22px;text-align:center}
+.nav-item.active .nav-badge{background:rgba(255,255,255,.25)}
+.sidebar-footer{padding:16px 24px calc(16px + var(--safe-bot));border-top:1px solid rgba(255,255,255,.08);font-size:.65rem;color:var(--mist);line-height:1.6}
+
+/* MAIN */
+main{display:flex;flex-direction:column;min-height:100vh;background:var(--paper)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;gap:12px}
+.topbar-left{display:flex;align-items:center;gap:14px;min-width:0}
+.page-title{font-family:'Inter',sans-serif;font-weight:700;font-size:1.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-family:'DM Mono',monospace;font-size:.75rem;cursor:pointer;border:none;transition:all .2s;font-weight:500;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-h);transform:translateY(-1px);box-shadow:0 4px 12px rgba(232,68,10,.3)}
+.btn-outline{background:transparent;color:var(--ink);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:var(--ink);background:var(--ink);color:#fff}
+.btn-sm{padding:5px 10px;font-size:.68rem}
+.content{padding:28px 32px 40px;flex:1}
+
+/* PANELS */
+.panel{display:none}
+.panel.active{display:block;animation:fadeUp .35s var(--ease)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* STAGGERED CARD ANIMATION */
+.stagger>*{opacity:0;transform:translateY(12px);animation:fadeUp .4s var(--ease) forwards}
+.stagger>*:nth-child(1){animation-delay:.04s}
+.stagger>*:nth-child(2){animation-delay:.1s}
+.stagger>*:nth-child(3){animation-delay:.16s}
+.stagger>*:nth-child(4){animation-delay:.22s}
+.stagger>*:nth-child(5){animation-delay:.28s}
+.stagger>*:nth-child(6){animation-delay:.34s}
+
+/* STATS ROW */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:default}
+.stat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
+.stat-card.gold::before{background:var(--gold)}
+.stat-card.green::before{background:var(--green)}
+.stat-card.blue::before{background:var(--blue)}
+.stat-card.purple::before{background:var(--purple)}
+.stat-label{font-size:.62rem;color:var(--mist);text-transform:uppercase;letter-spacing:.1em}
+.stat-val{font-family:'Inter',sans-serif;font-weight:800;font-size:2rem;margin:6px 0 2px;line-height:1;counter-reset:none}
+.stat-sub{font-size:.65rem;color:var(--mist)}
+.stat-icon{position:absolute;right:16px;top:16px;opacity:.08;width:40px;height:40px}
+
+/* SECTION HEADERS */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.section-title{font-family:'Inter',sans-serif;font-weight:700;font-size:.95rem}
+.section-sub{font-size:.68rem;color:var(--mist)}
+
+/* TABLE */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:auto;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;min-width:500px}
+th{background:#f8f7f4;padding:10px 14px;text-align:left;font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:.76rem;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#faf9f6;transition:background .15s}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:.62rem;font-weight:600}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.badge-on{background:#dcfce7;color:#166534}
+.badge-risk{background:#fef9c3;color:#854d0e}
+.badge-off{background:#fee2e2;color:#991b1b}
+.badge-plan{background:#e0e7ff;color:#3730a3}
+.badge-done{background:#f0fdf4;color:#166534}
+.badge-info{background:#e0f2fe;color:#075985}
+.badge-none{background:#f1f5f9;color:#475569}
+
+/* PROGRESS BAR */
+.prog-wrap{width:100px;background:#eee;border-radius:20px;height:5px;overflow:hidden;display:inline-block;vertical-align:middle}
+.prog-fill{height:100%;border-radius:20px;background:var(--accent);transition:width .8s var(--ease)}
+
+/* GANTT */
+.gantt-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:auto;box-shadow:var(--shadow)}
+.gantt-head{display:flex;border-bottom:1px solid var(--border);background:#f8f7f4;min-width:900px}
+.gantt-label-col{width:200px;flex-shrink:0;padding:10px 16px;font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mist);border-right:1px solid var(--border)}
+.gantt-months{display:flex;flex:1}
+.gantt-month{flex:1;padding:10px 8px;text-align:center;font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mist);border-right:1px solid var(--border)}
+.gantt-month:last-child{border-right:none}
+.gantt-row{display:flex;border-bottom:1px solid var(--border);align-items:center;min-height:44px;min-width:900px}
+.gantt-row:last-child{border-bottom:none}
+.gantt-row-label{width:200px;flex-shrink:0;padding:8px 16px;font-size:.73rem;border-right:1px solid var(--border);font-weight:500;line-height:1.3}
+.gantt-row-label small{display:block;font-size:.6rem;color:var(--mist);font-weight:400;margin-top:2px}
+.gantt-timeline{flex:1;position:relative;height:44px}
+.gantt-bar{position:absolute;height:22px;top:50%;transform:translateY(-50%);border-radius:4px;background:var(--accent);opacity:.85;transition:opacity .2s,box-shadow .2s;cursor:pointer;will-change:transform,opacity}
+.gantt-bar:hover{opacity:1;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.gantt-bar-label{position:absolute;inset:0;display:flex;align-items:center;padding:0 8px;font-size:.58rem;color:#fff;white-space:nowrap;overflow:hidden}
+.gantt-bar.gold{background:var(--gold)}.gantt-bar.green{background:var(--green)}.gantt-bar.blue{background:var(--blue)}.gantt-bar.purple{background:var(--purple)}
+.today-line{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);opacity:.4;z-index:5;pointer-events:none}
+
+/* RISK GRID */
+.risk-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.risk-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
+.risk-title{font-family:'Inter',sans-serif;font-weight:700;font-size:.88rem;margin-bottom:14px}
+.risk-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.risk-high{background:#ef4444}.risk-med{background:#f59e0b}.risk-low{background:#22c55e}
+
+/* MILESTONES */
+.ml-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;border:2px solid var(--card)}
+.ml-dot.done{background:#22c55e}.ml-dot.current{background:var(--accent)}.ml-dot.future{background:var(--border)}
+
+/* RESOURCE */
+.resource-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.resource-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);transition:transform .2s}
+.resource-card:hover{transform:translateY(-2px)}
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;font-weight:700;font-size:.9rem;color:#fff;flex-shrink:0}
+.rc-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.rc-name{font-weight:600;font-size:.82rem}
+.rc-role{font-size:.63rem;color:var(--mist)}
+.util-bar-wrap{margin-top:10px}
+.util-label{display:flex;justify-content:space-between;font-size:.63rem;color:var(--mist);margin-bottom:4px}
+.util-bar{height:6px;background:#eee;border-radius:20px;overflow:hidden}
+.util-fill{height:100%;border-radius:20px;transition:width 1s var(--ease)}
+
+/* BUDGET */
+.budget-row{display:grid;grid-template-columns:180px 1fr 80px minmax(100px,auto);gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.budget-row:last-child{border-bottom:none}
+.budget-name{font-size:.76rem;font-weight:500;line-height:1.3}
+.donut-wrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+svg.donut{transform:rotate(-90deg);flex-shrink:0}
+.donut-legend{display:flex;flex-direction:column;gap:8px;min-width:120px}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:.72rem}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(10,12,16,.55);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-bg.open{display:flex;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--card);border-radius:12px;padding:28px;width:min(580px,100%);box-shadow:var(--shadow-lg);animation:slideUp .3s var(--ease);max-height:90vh;overflow-y:auto}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+.modal h2{font-family:'Inter',sans-serif;font-weight:700;font-size:1.05rem;margin-bottom:20px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid.full{grid-template-columns:1fr}
+label{display:block;font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mist);margin-bottom:5px}
+input,select,textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:.76rem;background:var(--paper);color:var(--ink);transition:border-color .2s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+textarea{resize:vertical;min-height:72px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;flex-wrap:wrap}
+
+/* SEARCH */
+.search-box{position:relative}
+.search-box input{padding-left:32px}
+.search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--mist);width:14px;height:14px}
+.quick-add{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:16px;flex-wrap:wrap}
+.quick-add span{font-size:.72rem;color:var(--mist);white-space:nowrap}
+
+/* TOAST */
+#toast{position:fixed;bottom:calc(24px + var(--safe-bot));right:24px;background:var(--steel);color:#fff;padding:12px 18px;border-radius:8px;font-size:.75rem;z-index:9998;transform:translateY(60px);opacity:0;transition:all .3s var(--ease);max-width:280px}
+#toast.show{transform:none;opacity:1}
+
+/* MOBILE TOGGLE */
+.menu-toggle{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-shrink:0}
+
+/* GOVERNANCE SPECIFIC */
+.gov-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.health-ring-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.health-ring{flex-shrink:0}
+.health-ring svg{transform:rotate(-90deg)}
+.gate-dot{width:10px;height:10px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:4px}
+.gate-pass{background:#22c55e}.gate-review{background:#f59e0b}.gate-pending{background:#94a3b8}.gate-block{background:#ef4444}
+.policy-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);gap:8px;flex-wrap:wrap}
+.policy-row:last-child{border-bottom:none}
+.policy-name{font-size:.75rem;font-weight:500;flex:1;min-width:120px}
+.policy-checks{display:flex;gap:4px;flex-wrap:wrap}
+.chk{width:22px;height:22px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;flex-shrink:0;cursor:help}
+.chk-ok{background:#dcfce7;color:#166534}.chk-warn{background:#fef9c3;color:#854d0e}.chk-fail{background:#fee2e2;color:#991b1b}.chk-na{background:#f1f5f9;color:#94a3b8}
+.decision-item{padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start}
+.decision-item:last-child{border-bottom:none}
+.dec-type{font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0;margin-top:2px}
+.dec-approved{background:#dcfce7;color:#166534}.dec-deferred{background:#fef9c3;color:#854d0e}.dec-rejected{background:#fee2e2;color:#991b1b}.dec-pending{background:#e0e7ff;color:#3730a3}
+.dec-body{flex:1;min-width:0}
+.dec-title{font-size:.76rem;font-weight:500;line-height:1.3}
+.dec-meta{font-size:.63rem;color:var(--mist);margin-top:2px}
+.cr-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.cr-row:last-child{border-bottom:none}
+.cr-id{font-size:.62rem;color:var(--mist);font-weight:700;white-space:nowrap;min-width:48px}
+.cr-title{font-size:.75rem;flex:1;min-width:100px;font-weight:500}
+.cr-impact{font-size:.62rem;padding:2px 7px;border-radius:3px;font-weight:600}
+.cr-h{background:#fee2e2;color:#991b1b}.cr-m{background:#fef9c3;color:#854d0e}.cr-l{background:#dcfce7;color:#166534}
+.gov-cal-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.gov-cal-item:last-child{border-bottom:none}
+.cal-date-box{background:var(--paper);border:1px solid var(--border);border-radius:6px;width:44px;text-align:center;padding:6px 4px;flex-shrink:0}
+.cal-day{font-family:'Inter',sans-serif;font-weight:800;font-size:1.1rem;line-height:1}
+.cal-mon{font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mist)}
+.cal-body{flex:1;min-width:0}
+.cal-title{font-size:.76rem;font-weight:500}
+.cal-sub{font-size:.63rem;color:var(--mist);margin-top:2px}
+
+/* SETTINGS MODAL */
+.color-row{display:flex;align-items:center;gap:10px}
+.color-row input[type=color]{width:40px;height:32px;padding:2px;border-radius:4px;cursor:pointer}
+
+/* SIDEBAR OVERLAY */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199}
+.sidebar-overlay.show{display:block;animation:fadeIn .2s}
+
+/* RESPONSIVE */
+@media(max-width:1100px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .budget-row{grid-template-columns:140px 1fr 60px auto}
+}
+@media(max-width:900px){
+  #app{grid-template-columns:1fr}
+  aside{position:fixed;left:-280px;top:0;height:100%;width:260px;z-index:200;transition:left .3s var(--ease)}
+  aside.open{left:0;box-shadow:var(--shadow-lg)}
+  .menu-toggle{display:block}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .resource-grid{grid-template-columns:repeat(2,1fr)}
+  .risk-grid,.gov-grid{grid-template-columns:1fr}
+  .content{padding:20px 16px}
+  .topbar{padding:14px 16px}
+  .form-grid{grid-template-columns:1fr}
+  .budget-row{grid-template-columns:1fr 1fr;row-gap:4px;}
+}
+@media(max-width:500px){
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .resource-grid{grid-template-columns:1fr}
+  .stat-val{font-size:1.6rem}
+  .content{padding:16px 12px}
+  .topbar{padding:12px}
+  table{min-width:400px}
+}
+/* Landscape mobile safe zones */
+@media(max-height:500px) and (orientation:landscape){
+  .content{padding:12px 16px}
+  .stats-grid{grid-template-columns:repeat(4,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="ld-logo" id="ld-logo-text">NEX<span>US</span></div>
+  <div class="ld-bar"><div class="ld-fill"></div></div>
+  <div class="ld-sub" id="ld-sub-text">Project Governance Suite</div>
+</div>
+
+<div id="toast"></div>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div id="app">
+<aside id="sidebar">
+  <div class="logo">
+    <h1 id="logo-h1">NEX<span>US</span></h1>
+    <p id="logo-sub">Project Governance Suite</p>
+  </div>
+  <nav>
+    <div class="nav-section">Workspace</div>
+    <button class="nav-item active" onclick="nav('dashboard',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-item" onclick="nav('governance',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Governance Board
+      <span class="nav-badge" id="gov-alert-count">0</span>
+    </button>
+    <button class="nav-item" onclick="nav('projects',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+      Projects
+      <span class="nav-badge" id="proj-count">0</span>
+    </button>
+    <button class="nav-item" onclick="nav('gantt',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Gantt / Timeline
+    </button>
+    <button class="nav-item" onclick="nav('milestones',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Milestones
+    </button>
+    <div class="nav-section">Governance</div>
+    <button class="nav-item" onclick="nav('risks',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Risk Register
+      <span class="nav-badge" id="risk-count">0</span>
+    </button>
+    <button class="nav-item" onclick="nav('budget',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Budget Tracker
+    </button>
+    <button class="nav-item" onclick="nav('resources',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Resources
+    </button>
+    <div class="nav-section">System</div>
+    <button class="nav-item" onclick="openSettings()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Company Settings
+    </button>
+  </nav>
+  <div class="sidebar-footer" id="sidebar-footer">v3.0 · Governance Suite<br id="footer-name-br">© 2025 Nexus Systems</div>
+</aside>
+
+<main>
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="page-title" id="page-title">Dashboard</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-outline btn-sm" onclick="exportData()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+      <button class="btn btn-primary btn-sm" id="main-add-btn" onclick="openAddModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span id="add-label">Add Project</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="stats-grid stagger">
+        <div class="stat-card"><div class="stat-label">Total Projects</div><div class="stat-val" id="s-total">0</div><div class="stat-sub">Active portfolio</div></div>
+        <div class="stat-card green"><div class="stat-label">On Track</div><div class="stat-val" id="s-ontrack">0</div><div class="stat-sub">Green status</div></div>
+        <div class="stat-card gold"><div class="stat-label">At Risk</div><div class="stat-val" id="s-atrisk">0</div><div class="stat-sub">Needs attention</div></div>
+        <div class="stat-card blue"><div class="stat-label">Risks Open</div><div class="stat-val" id="s-risks">0</div><div class="stat-sub">Unmitigated</div></div>
+      </div>
+      <div class="section-header">
+        <span class="section-title">Recent Projects</span>
+        <button class="btn btn-outline btn-sm" onclick="nav('projects',document.querySelector('[onclick*=projects]'))">View All →</button>
+      </div>
+      <div class="table-wrap" style="margin-bottom:28px">
+        <table><thead><tr><th>Project</th><th>Status</th><th>Progress</th><th>Due</th><th>PM</th></tr></thead>
+        <tbody id="dashboard-tbody"></tbody></table>
+      </div>
+      <div class="section-header"><span class="section-title">Open Risks</span></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Risk</th><th>Project</th><th>Severity</th><th>Owner</th></tr></thead>
+        <tbody id="dash-risks-tbody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- GOVERNANCE BOARD -->
+    <div class="panel" id="panel-governance">
+      <div class="stats-grid stagger" id="gov-stats"></div>
+      <div class="gov-grid" style="margin-bottom:16px">
+        <!-- Health Score -->
+        <div class="risk-card">
+          <div class="risk-title">Portfolio Health Score</div>
+          <div class="health-ring-wrap" id="gov-health"></div>
+        </div>
+        <!-- Stage Gates -->
+        <div class="risk-card">
+          <div class="risk-title">Stage Gate Reviews</div>
+          <div id="gov-gates"></div>
+        </div>
+      </div>
+      <div class="gov-grid" style="margin-bottom:16px">
+        <!-- Policy Compliance -->
+        <div class="risk-card">
+          <div class="risk-title">Policy Compliance</div>
+          <div style="font-size:.62rem;color:var(--mist);margin-bottom:10px">Per project across 5 governance pillars</div>
+          <div id="gov-policies"></div>
+        </div>
+        <!-- Decision Log -->
+        <div class="risk-card">
+          <div class="risk-title">Decision Log</div>
+          <div id="gov-decisions"></div>
+        </div>
+      </div>
+      <div class="gov-grid">
+        <!-- Change Requests -->
+        <div class="risk-card">
+          <div class="risk-title">Change Control Board</div>
+          <div style="font-size:.62rem;color:var(--mist);margin-bottom:10px" id="gov-cr-sub"></div>
+          <div id="gov-crs"></div>
+        </div>
+        <!-- Governance Calendar -->
+        <div class="risk-card">
+          <div class="risk-title">Governance Calendar</div>
+          <div id="gov-cal"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div class="panel" id="panel-projects">
+      <div class="quick-add">
+        <span>Filter:</span>
+        <select id="filter-status" onchange="renderProjects()" style="width:auto;padding:6px 10px">
+          <option value="">All Status</option>
+          <option>On Track</option><option>At Risk</option><option>Off Track</option><option>Planning</option><option>Completed</option>
+        </select>
+        <div class="search-box" style="flex:1;min-width:140px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" id="search-proj" placeholder="Search…" oninput="renderProjects()">
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Project Name</th><th>Type</th><th>Status</th><th>Progress</th><th>Budget</th><th>Start</th><th>End</th><th>PM</th><th>Actions</th></tr></thead>
+        <tbody id="projects-tbody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- GANTT -->
+    <div class="panel" id="panel-gantt">
+      <div class="section-header"><span class="section-title">Project Timeline — 12 Month View</span><span class="section-sub" id="gantt-range"></span></div>
+      <div class="gantt-wrap">
+        <div class="gantt-head"><div class="gantt-label-col">Project</div><div class="gantt-months" id="gantt-months"></div></div>
+        <div id="gantt-body"></div>
+      </div>
+    </div>
+
+    <!-- MILESTONES -->
+    <div class="panel" id="panel-milestones">
+      <div class="risk-card">
+        <div class="risk-title">Milestone Timeline</div>
+        <div id="milestone-content" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;margin-top:4px"></div>
+      </div>
+    </div>
+
+    <!-- RISKS -->
+    <div class="panel" id="panel-risks">
+      <div class="risk-card">
+        <div class="section-header" style="margin-bottom:16px"><div class="risk-title" style="margin-bottom:0">Risk Register</div></div>
+        <div class="table-wrap" style="border:none;box-shadow:none">
+          <table><thead><tr><th>Risk</th><th>Project</th><th>Category</th><th>Severity</th><th>Probability</th><th>Owner</th><th>Mitigation</th><th>Status</th><th></th></tr></thead>
+          <tbody id="risks-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BUDGET -->
+    <div class="panel" id="panel-budget">
+      <div class="risk-grid" style="margin-bottom:24px">
+        <div class="risk-card"><div class="risk-title" style="margin-bottom:16px">Budget Overview</div><div class="donut-wrap" id="donut-area"></div></div>
+        <div class="risk-card"><div class="risk-title">Budget by Project</div><div id="budget-rows"></div></div>
+      </div>
+    </div>
+
+    <!-- RESOURCES -->
+    <div class="panel" id="panel-resources">
+      <div class="resource-grid" id="resource-grid"></div>
+    </div>
+
+  </div>
+</main>
+</div>
+
+<!-- PROJECT MODAL -->
+<div class="modal-bg" id="modal-project">
+  <div class="modal">
+    <h2 id="modal-title">Add New Project</h2>
+    <div class="form-grid">
+      <div><label>Project Name</label><input id="f-name" placeholder="e.g. AI Governance Framework"></div>
+      <div><label>Type</label><select id="f-type"></select></div>
+      <div><label>Project Manager</label><input id="f-pm" placeholder="Full name"></div>
+      <div><label>Status</label>
+        <select id="f-status"><option>Planning</option><option>On Track</option><option>At Risk</option><option>Off Track</option><option>Completed</option></select>
+      </div>
+      <div><label>Start Date</label><input type="date" id="f-start"></div>
+      <div><label>End Date</label><input type="date" id="f-end"></div>
+      <div><label>Budget (<span class="cur-sym">$</span>)</label><input type="number" id="f-budget" placeholder="500000"></div>
+      <div><label>Progress (%)</label><input type="number" id="f-progress" placeholder="0" min="0" max="100"></div>
+    </div>
+    <div class="form-grid full" style="margin-top:14px">
+      <div><label>Description</label><textarea id="f-desc" placeholder="Brief project overview…"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-project')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProject()">Save Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- RISK MODAL -->
+<div class="modal-bg" id="modal-risk">
+  <div class="modal">
+    <h2>Add Risk</h2>
+    <div class="form-grid">
+      <div><label>Risk Title</label><input id="r-title" placeholder="e.g. Data breach exposure"></div>
+      <div><label>Project</label><select id="r-project"></select></div>
+      <div><label>Category</label>
+        <select id="r-cat"><option>Technical</option><option>Compliance</option><option>Resource</option><option>Schedule</option><option>Budget</option><option>Vendor</option></select>
+      </div>
+      <div><label>Severity</label>
+        <select id="r-sev"><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select>
+      </div>
+      <div><label>Probability</label>
+        <select id="r-prob"><option>Low</option><option>Medium</option><option>High</option></select>
+      </div>
+      <div><label>Owner</label><input id="r-owner" placeholder="Risk owner name"></div>
+    </div>
+    <div class="form-grid full" style="margin-top:14px">
+      <div><label>Mitigation Plan</label><textarea id="r-mit" placeholder="Describe mitigation steps…"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-risk')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRisk()">Save Risk</button>
+    </div>
+  </div>
+</div>
+
+<!-- DECISION MODAL -->
+<div class="modal-bg" id="modal-decision">
+  <div class="modal">
+    <h2>Log Decision</h2>
+    <div class="form-grid">
+      <div><label>Decision Title</label><input id="d-title" placeholder="e.g. Approved vendor change"></div>
+      <div><label>Project</label><select id="d-project"></select></div>
+      <div><label>Type</label>
+        <select id="d-type"><option>Approved</option><option>Deferred</option><option>Rejected</option><option>Pending</option></select>
+      </div>
+      <div><label>Decision Maker</label><input id="d-maker" placeholder="Name / Committee"></div>
+      <div><label>Date</label><input type="date" id="d-date"></div>
+      <div><label>Impact</label>
+        <select id="d-impact"><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select>
+      </div>
+    </div>
+    <div class="form-grid full" style="margin-top:14px">
+      <div><label>Rationale</label><textarea id="d-rationale" placeholder="Reason for this decision…"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-decision')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDecision()">Save Decision</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE REQUEST MODAL -->
+<div class="modal-bg" id="modal-cr">
+  <div class="modal">
+    <h2>Submit Change Request</h2>
+    <div class="form-grid">
+      <div><label>CR Title</label><input id="cr-title" placeholder="e.g. Scope expansion - module 3"></div>
+      <div><label>Project</label><select id="cr-project"></select></div>
+      <div><label>Change Type</label>
+        <select id="cr-type"><option>Scope</option><option>Schedule</option><option>Budget</option><option>Resource</option><option>Technical</option></select>
+      </div>
+      <div><label>Impact Level</label>
+        <select id="cr-impact"><option>Low</option><option>Medium</option><option>High</option></select>
+      </div>
+      <div><label>Requested By</label><input id="cr-by" placeholder="Requestor name"></div>
+      <div><label>Target Date</label><input type="date" id="cr-date"></div>
+    </div>
+    <div class="form-grid full" style="margin-top:14px">
+      <div><label>Description</label><textarea id="cr-desc" placeholder="Describe the change and business justification…"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-cr')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCR()">Submit CR</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-bg" id="modal-settings">
+  <div class="modal">
+    <h2>Company Settings</h2>
+    <div class="form-grid full" style="gap:16px">
+      <div><label>Company / Suite Name</label><input id="s-company" placeholder="NEXUS"></div>
+      <div><label>Logo Tagline</label><input id="s-tagline" placeholder="Project Governance Suite"></div>
+      <div><label>Footer Text</label><input id="s-footer" placeholder="© 2025 Nexus Systems"></div>
+    </div>
+    <div class="form-grid" style="margin-top:14px">
+      <div><label>Accent Color</label><div class="color-row"><input type="color" id="s-accent" value="#e8440a"><span id="s-accent-val" style="font-size:.72rem">#e8440a</span></div></div>
+      <div><label>Sidebar Color</label><div class="color-row"><input type="color" id="s-steel" value="#1a1f2e"><span id="s-steel-val" style="font-size:.72rem">#1a1f2e</span></div></div>
+      <div><label>Currency Symbol</label><input id="s-currency" placeholder="$" style="max-width:80px"></div>
+      <div><label>Date Format</label><select id="s-datefmt"><option value="en-US">US (Jan 1, 2025)</option><option value="en-GB">UK (1 Jan 2025)</option><option value="de-DE">EU (1. Jan 2025)</option></select></div>
+    </div>
+    <div style="margin-top:14px">
+      <label>Project Types (comma-separated)</label>
+      <textarea id="s-types" style="min-height:56px" placeholder="AI Governance, IT Modernization, Data Platform…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-settings')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Apply Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- MILESTONE MODAL -->
+<div class="modal-bg" id="modal-milestone">
+  <div class="modal">
+    <h2>Add Milestone</h2>
+    <div class="form-grid">
+      <div><label>Milestone Name</label><input id="ml-name" placeholder="e.g. Phase 1 Sign-off"></div>
+      <div><label>Project</label><select id="ml-project"></select></div>
+      <div><label>Target Date</label><input type="date" id="ml-date"></div>
+      <div><label>Completed?</label><select id="ml-done" style="width:auto"><option value="false">No</option><option value="true">Yes</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-milestone')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMilestone()">Save Milestone</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESOURCE MODAL -->
+<div class="modal-bg" id="modal-resource">
+  <div class="modal">
+    <h2>Add Resource</h2>
+    <div class="form-grid">
+      <div><label>Full Name</label><input id="res-name" placeholder="Jane Smith"></div>
+      <div><label>Role / Title</label><input id="res-role" placeholder="Project Manager"></div>
+      <div><label>Department</label><input id="res-dept" placeholder="IT, Finance…"></div>
+      <div><label>Email</label><input id="res-email" type="email" placeholder="jane@company.com"></div>
+      <div><label>Utilization %</label><input type="number" id="res-util" placeholder="50" min="0" max="100"></div>
+      <div><label>Primary Project</label><select id="res-project"></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-resource')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveResource()">Save Resource</button>
+    </div>
+  </div>
+</div>
+
+<!-- BUDGET MODAL -->
+<div class="modal-bg" id="modal-budget">
+  <div class="modal">
+    <h2>Update Budget</h2>
+    <div class="form-grid full" style="gap:14px">
+      <div><label>Project</label><select id="bud-project"></select></div>
+      <div><label>Total Budget (<span class="cur-sym">$</span>)</label><input type="number" id="bud-budget" placeholder="500000"></div>
+      <div><label>Amount Spent (<span class="cur-sym">$</span>)</label><input type="number" id="bud-spent" placeholder="0"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-budget')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBudget()">Update Budget</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALENDAR EVENT MODAL -->
+<div class="modal-bg" id="modal-cal">
+  <div class="modal">
+    <h2>Add Calendar Event</h2>
+    <div class="form-grid full" style="gap:14px">
+      <div><label>Event Title</label><input id="cal-title" placeholder="e.g. Board Review"></div>
+      <div><label>Description / Subtitle</label><input id="cal-sub" placeholder="Details about this event"></div>
+      <div><label>Days from Today</label><input type="number" id="cal-days" placeholder="7" min="0"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-cal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCalEvent()">Save Event</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+// COMPANY CONFIG — change this object to rebrand for any organisation
+// ════════════════════════════════════════════════════════════════════
+const DEFAULT_CONFIG = {
+  company:'NEXUS', tagline:'Project Governance Suite',
+  footer:'v3.0 · Governance Suite\n© 2025 Nexus Systems',
+  accent:'#e8440a', steel:'#1a1f2e',
+  currency:'$', dateFmt:'en-US',
+  projectTypes:['AI Governance','IT Modernization','Data Platform','Cybersecurity','Cloud Migration','Digital Transformation','ERP Implementation','Product Development']
+};
+
+let CFG = JSON.parse(localStorage.getItem('nx-config')||'null') || {...DEFAULT_CONFIG};
+
+// ════════════════════════════════════════════════════════════════════
+// DATA STORES
+// ════════════════════════════════════════════════════════════════════
+let projects    = JSON.parse(localStorage.getItem('nx-projects')||'[]');
+let risks       = JSON.parse(localStorage.getItem('nx-risks')||'[]');
+let decisions   = JSON.parse(localStorage.getItem('nx-decisions')||'[]');
+let changeReqs  = JSON.parse(localStorage.getItem('nx-crs')||'[]');
+let editIdx=-1, currentPanel='dashboard';
+
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const COLORS=['#e8440a','#c9a84c','#2d9e5a','#3b6ef5','#7c3aed','#0891b2','#db2777'];
+const AVT_COLORS=['#e8440a','#3b6ef5','#2d9e5a','#7c3aed','#c9a84c'];
+const TITLES={dashboard:'Dashboard',governance:'Governance Board',projects:'Projects',gantt:'Gantt / Timeline',milestones:'Milestones',risks:'Risk Register',budget:'Budget Tracker',resources:'Resources'};
+const ADD_LABELS={dashboard:'Add Project',governance:'Log Decision',projects:'Add Project',gantt:'Add Project',milestones:'Add Milestone',risks:'Add Risk',budget:'Update Budget',resources:'Add Resource'};
+let editRiskIdx=-1, editDecIdx=-1, editCRIdx=-1, editResIdx=-1;
+let customMilestones=JSON.parse(localStorage.getItem('nx-milestones')||'[]');
+let resources=JSON.parse(localStorage.getItem('nx-resources')||'[]');
+let calEvents=JSON.parse(localStorage.getItem('nx-calevents')||'null');
+const DEFAULT_CAL=[
+  {title:'Steering Committee Review',sub:'Monthly portfolio status update',days:3},
+  {title:'Risk & Compliance Audit',sub:'Q2 governance audit — all projects',days:12},
+  {title:'Stage Gate: ERP Phase 3',sub:'Legacy ERP Migration',days:18},
+  {title:'CCB Meeting',sub:'Review pending change requests',days:21},
+  {title:'AI Ethics Board Quarterly',sub:'Model risk governance review',days:34},
+];
+if(!calEvents) calEvents=[...DEFAULT_CAL];
+
+// ════════════════════════════════════════════════════════════════════
+// SEED DATA
+// ════════════════════════════════════════════════════════════════════
+function seedData(){
+  if(projects.length) return;
+  const y=new Date().getFullYear();
+  projects=[
+    {id:1,name:'AI Ethics Framework',type:'AI Governance',pm:'Sarah Chen',status:'On Track',start:`${y}-01-15`,end:`${y}-09-30`,budget:480000,spent:210000,progress:52,desc:'Enterprise-wide AI governance policies and model risk controls'},
+    {id:2,name:'Legacy ERP Migration',type:'IT Modernization',pm:'James Okafor',status:'At Risk',start:`${y}-03-01`,end:`${y}-12-15`,budget:1200000,spent:680000,progress:38,desc:'Migrate legacy SAP to cloud-native ERP'},
+    {id:3,name:'Data Lake Modernization',type:'Data Platform',pm:'Priya Nair',status:'On Track',start:`${y}-02-01`,end:`${y}-10-31`,budget:650000,spent:280000,progress:61,desc:'Unified data platform on AWS'},
+    {id:4,name:'Zero Trust Security',type:'Cybersecurity',pm:'Marcus Velez',status:'Planning',start:`${y}-05-01`,end:`${y+1}-01-31`,budget:920000,spent:45000,progress:8,desc:'Zero-trust architecture across enterprise'},
+    {id:5,name:'Model Risk Management',type:'AI Governance',pm:'Sarah Chen',status:'On Track',start:`${y}-04-01`,end:`${y}-11-30`,budget:310000,spent:95000,progress:29,desc:'AI model validation and monitoring framework'},
+  ];
+  risks=[
+    {id:1,title:'Cloud cost overrun',project:'Legacy ERP Migration',cat:'Budget',sev:'High',prob:'High',owner:'James Okafor',mit:'Weekly cost reviews + auto-alerts',status:'Open'},
+    {id:2,title:'Vendor lock-in risk',project:'Data Lake Modernization',cat:'Vendor',sev:'Medium',prob:'Medium',owner:'Priya Nair',mit:'Multi-cloud abstraction layer',status:'Mitigated'},
+    {id:3,title:'Regulatory non-compliance',project:'AI Ethics Framework',cat:'Compliance',sev:'Critical',prob:'Low',owner:'Sarah Chen',mit:'Legal review bi-weekly',status:'Open'},
+    {id:4,title:'Key talent attrition',project:'Zero Trust Security',cat:'Resource',sev:'High',prob:'Medium',owner:'Marcus Velez',mit:'Retention bonuses & cross-training',status:'Open'},
+  ];
+  const y2=y; const now=new Date();
+  decisions=[
+    {id:1,title:'Approved additional QA sprint for ERP',project:'Legacy ERP Migration',type:'Approved',maker:'Steering Committee',date:`${y2}-04-10`,impact:'High',rationale:'Critical defects found in UAT phase requiring dedicated quality gate'},
+    {id:2,title:'Deferred Zero Trust Phase 2',project:'Zero Trust Security',type:'Deferred',maker:'CTO',date:`${y2}-04-22`,impact:'Medium',rationale:'Resource constraints; Phase 1 must stabilize first'},
+    {id:3,title:'Approved model documentation standard',project:'AI Ethics Framework',type:'Approved',maker:'AI Governance Board',date:`${y2}-05-01`,impact:'High',rationale:'Regulatory alignment requirement for Q3 audit'},
+    {id:4,title:'Vendor selection — AWS vs Azure for Data Lake',project:'Data Lake Modernization',type:'Pending',maker:'Architecture Review Board',date:`${y2}-05-15`,impact:'Critical',rationale:'Pending final cost analysis report from Finance'},
+  ];
+  changeReqs=[
+    {id:1,title:'Add Tableau integration module',project:'Data Lake Modernization',type:'Scope',impact:'Medium',by:'Priya Nair',date:`${y2}-05-20`,desc:'Business intelligence team requires Tableau connector',status:'Pending'},
+    {id:2,title:'Extend ERP go-live by 6 weeks',project:'Legacy ERP Migration',type:'Schedule',impact:'High',by:'James Okafor',date:`${y2}-04-28`,desc:'UAT defect backlog too large for current timeline',status:'Approved'},
+    {id:3,title:'Additional security architect resource',project:'Zero Trust Security',type:'Resource',impact:'Medium',by:'Marcus Velez',date:`${y2}-05-10`,desc:'Require senior security architect for network segmentation design',status:'Pending'},
+  ];
+  save();
+}
+
+function save(){
+  localStorage.setItem('nx-projects',JSON.stringify(projects));
+  localStorage.setItem('nx-risks',JSON.stringify(risks));
+  localStorage.setItem('nx-decisions',JSON.stringify(decisions));
+  localStorage.setItem('nx-crs',JSON.stringify(changeReqs));
+  localStorage.setItem('nx-milestones',JSON.stringify(customMilestones));
+  localStorage.setItem('nx-resources',JSON.stringify(resources));
+  localStorage.setItem('nx-calevents',JSON.stringify(calEvents));
+  document.getElementById('proj-count').textContent=projects.length;
+  const openRisks=risks.filter(r=>r.status==='Open').length;
+  document.getElementById('risk-count').textContent=openRisks;
+  const alerts=changeReqs.filter(c=>c.status==='Pending').length+decisions.filter(d=>d.type==='Pending').length;
+  document.getElementById('gov-alert-count').textContent=alerts||'';
+}
+
+// ════════════════════════════════════════════════════════════════════
+// CONFIG / SETTINGS
+// ════════════════════════════════════════════════════════════════════
+function applyConfig(){
+  const c=CFG;
+  document.title=c.company+' — Project Governance';
+  document.getElementById('doc-title').textContent=c.company+' — Project Governance';
+  // Logo text
+  const half=Math.ceil(c.company.length/2);
+  document.getElementById('logo-h1').innerHTML=c.company.slice(0,half)+'<span>'+c.company.slice(half)+'</span>';
+  document.getElementById('logo-sub').textContent=c.tagline;
+  document.getElementById('ld-logo-text').innerHTML=c.company.slice(0,half)+'<span>'+c.company.slice(half)+'</span>';
+  document.getElementById('ld-sub-text').textContent=c.tagline;
+  document.getElementById('sidebar-footer').innerHTML=c.footer.replace(/\n/g,'<br>');
+  // Colors
+  document.documentElement.style.setProperty('--accent',c.accent);
+  document.documentElement.style.setProperty('--accent-h',shadeColor(c.accent,-20));
+  document.documentElement.style.setProperty('--steel',c.steel);
+  // Currency
+  document.querySelectorAll('.cur-sym').forEach(el=>el.textContent=c.currency);
+  // Project types
+  populateTypeSelects();
+}
+
+function shadeColor(col,pct){
+  let R=parseInt(col.slice(1,3),16),G=parseInt(col.slice(3,5),16),B=parseInt(col.slice(5,7),16);
+  R=Math.max(0,Math.min(255,R+pct)); G=Math.max(0,Math.min(255,G+pct)); B=Math.max(0,Math.min(255,B+pct));
+  return '#'+[R,G,B].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
+function populateTypeSelects(){
+  const opts=CFG.projectTypes.map(t=>`<option>${t}</option>`).join('');
+  ['f-type'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+}
+
+function openSettings(){
+  const c=CFG;
+  document.getElementById('s-company').value=c.company;
+  document.getElementById('s-tagline').value=c.tagline;
+  document.getElementById('s-footer').value=c.footer;
+  document.getElementById('s-accent').value=c.accent;
+  document.getElementById('s-accent-val').textContent=c.accent;
+  document.getElementById('s-steel').value=c.steel;
+  document.getElementById('s-steel-val').textContent=c.steel;
+  document.getElementById('s-currency').value=c.currency;
+  document.getElementById('s-datefmt').value=c.dateFmt;
+  document.getElementById('s-types').value=c.projectTypes.join(', ');
+  ['s-accent','s-steel'].forEach(id=>{
+    document.getElementById(id).addEventListener('input',function(){
+      document.getElementById(id+'-val').textContent=this.value;
+    },{once:false});
+  });
+  document.getElementById('modal-settings').classList.add('open');
+}
+
+function saveSettings(){
+  CFG={
+    company:document.getElementById('s-company').value.trim()||'NEXUS',
+    tagline:document.getElementById('s-tagline').value.trim()||'Project Governance Suite',
+    footer:document.getElementById('s-footer').value.trim()||'© 2025',
+    accent:document.getElementById('s-accent').value,
+    steel:document.getElementById('s-steel').value,
+    currency:document.getElementById('s-currency').value.trim()||'$',
+    dateFmt:document.getElementById('s-datefmt').value,
+    projectTypes:document.getElementById('s-types').value.split(',').map(s=>s.trim()).filter(Boolean)
+  };
+  localStorage.setItem('nx-config',JSON.stringify(CFG));
+  applyConfig();
+  closeModal('modal-settings');
+  toast('Settings saved — branding updated');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// NAV
+// ════════════════════════════════════════════════════════════════════
+function nav(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  currentPanel=id;
+  document.getElementById('page-title').textContent=TITLES[id]||id;
+  document.getElementById('add-label').textContent=ADD_LABELS[id]||'Add';
+  closeSidebar();
+  renderPanel(id);
+}
+
+function renderPanel(id){
+  const fn={dashboard:renderDashboard,governance:renderGovernance,projects:renderProjects,gantt:renderGantt,milestones:renderMilestones,risks:renderRisks,budget:renderBudget,resources:renderResources};
+  if(fn[id]) fn[id]();
+}
+
+// ════════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════════════════════
+function renderDashboard(){
+  const on=projects.filter(p=>p.status==='On Track').length;
+  const at=projects.filter(p=>p.status==='At Risk'||p.status==='Off Track').length;
+  document.getElementById('s-total').textContent=projects.length;
+  document.getElementById('s-ontrack').textContent=on;
+  document.getElementById('s-atrisk').textContent=at;
+  document.getElementById('s-risks').textContent=risks.filter(r=>r.status==='Open').length;
+  // Make stat cards clickable
+  const statActions=[['s-total','projects'],['s-ontrack','projects'],['s-atrisk','projects'],['s-risks','risks']];
+  statActions.forEach(([id,panel])=>{
+    const card=document.getElementById(id)?.closest('.stat-card');
+    if(card){card.style.cursor='pointer';card.onclick=()=>nav(panel,document.querySelector(`[onclick*="${panel}"]`));}
+  });
+  document.getElementById('dashboard-tbody').innerHTML=projects.slice(0,5).map(p=>`
+    <tr><td><strong>${p.name}</strong><br><small style="color:var(--mist)">${p.type}</small></td>
+    <td>${badgeHTML(p.status)}</td>
+    <td><div class="prog-wrap"><div class="prog-fill" style="width:${p.progress}%"></div></div> <small style="color:var(--mist);font-size:.62rem">${p.progress}%</small></td>
+    <td style="white-space:nowrap">${fmt(p.end)}</td><td>${p.pm}</td></tr>`).join('')||noData(5);
+  document.getElementById('dash-risks-tbody').innerHTML=risks.filter(r=>r.status==='Open').slice(0,4).map(r=>`
+    <tr><td><strong>${r.title}</strong></td><td>${r.project}</td><td>${sevBadge(r.sev)}</td><td>${r.owner}</td></tr>`).join('')||noData(4);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// GOVERNANCE BOARD
+// ════════════════════════════════════════════════════════════════════
+function govHealthScore(){
+  if(!projects.length) return 0;
+  let score=0;
+  projects.forEach(p=>{
+    if(p.status==='On Track') score+=100;
+    else if(p.status==='Planning') score+=70;
+    else if(p.status==='At Risk') score+=40;
+    else if(p.status==='Completed') score+=100;
+    else score+=10; // Off Track
+  });
+  const base=score/projects.length;
+  const riskPenalty=risks.filter(r=>r.status==='Open'&&(r.sev==='Critical'||r.sev==='High')).length*4;
+  return Math.max(0,Math.min(100,Math.round(base-riskPenalty)));
+}
+
+function renderGovernance(){
+  const score=govHealthScore();
+  const pendingCRs=changeReqs.filter(c=>c.status==='Pending').length;
+  const openDec=decisions.filter(d=>d.type==='Pending').length;
+  const gatesPassed=projects.filter(p=>p.progress>=25).length;
+
+  // Stats
+  document.getElementById('gov-stats').className='stats-grid stagger';
+  document.getElementById('gov-stats').innerHTML=`
+    <div class="stat-card ${score>=75?'green':score>=50?'gold':''}"><div class="stat-label">Health Score</div><div class="stat-val">${score}%</div><div class="stat-sub">Portfolio governance</div></div>
+    <div class="stat-card blue"><div class="stat-label">Gates Passed</div><div class="stat-val">${gatesPassed}/${projects.length}</div><div class="stat-sub">Phase gate reviews</div></div>
+    <div class="stat-card gold"><div class="stat-label">Pending Decisions</div><div class="stat-val">${openDec}</div><div class="stat-sub">Awaiting resolution</div></div>
+    <div class="stat-card purple"><div class="stat-label">Change Requests</div><div class="stat-val">${pendingCRs}</div><div class="stat-sub">Pending CCB review</div></div>`;
+
+  // Health ring
+  const r=60,cx=70,cy=70,circ=2*Math.PI*r;
+  const col=score>=75?'#22c55e':score>=50?'#f59e0b':'#ef4444';
+  document.getElementById('gov-health').innerHTML=`
+    <div class="health-ring">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#eee" stroke-width="14" style="transform:rotate(-90deg);transform-origin:70px 70px"/>
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${col}" stroke-width="14"
+          stroke-dasharray="${circ*score/100} ${circ*(1-score/100)}" stroke-linecap="round"
+          style="transform:rotate(-90deg);transform-origin:70px 70px;transition:stroke-dasharray 1.2s cubic-bezier(.16,1,.3,1)"/>
+        <text x="70" y="65" text-anchor="middle" font-family="Inter" font-weight="800" font-size="22" fill="${col}">${score}</text>
+        <text x="70" y="82" text-anchor="middle" font-family="DM Mono" font-size="9" fill="#8b9ab1">HEALTH SCORE</text>
+      </svg>
+    </div>
+    <div style="flex:1;min-width:100px">
+      ${[['On Track',projects.filter(p=>p.status==='On Track').length,'#22c55e'],
+         ['At Risk',projects.filter(p=>p.status==='At Risk').length,'#f59e0b'],
+         ['Off Track',projects.filter(p=>p.status==='Off Track').length,'#ef4444'],
+         ['Planning',projects.filter(p=>p.status==='Planning').length,'#3b6ef5'],
+         ['Completed',projects.filter(p=>p.status==='Completed').length,'#94a3b8']
+        ].map(([l,n,c])=>`<div class="legend-item"><div class="legend-dot" style="background:${c}"></div>${l}: <strong style="margin-left:auto;padding-left:8px">${n}</strong></div>`).join('')}
+    </div>`;
+
+  // Stage Gates
+  const gates=['Initiation','Planning','Execution','Monitoring','Closure'];
+  document.getElementById('gov-gates').innerHTML=`<div class="table-wrap" style="border:none;box-shadow:none"><table style="min-width:280px"><thead><tr><th>Project</th><th>Gate</th><th>Status</th></tr></thead><tbody>
+    ${projects.map(p=>{
+      const gate=p.progress<10?'Initiation':p.progress<30?'Planning':p.progress<60?'Execution':p.progress<90?'Monitoring':'Closure';
+      const gStatus=p.status==='On Track'||p.status==='Completed'?'pass':p.status==='At Risk'?'review':p.status==='Off Track'?'block':'pending';
+      const gLabel={pass:'Passed',review:'Review',block:'Blocked',pending:'Pending'}[gStatus];
+      const gClass={pass:'badge-on',review:'badge-risk',block:'badge-off',pending:'badge-plan'}[gStatus];
+      return `<tr><td style="font-size:.72rem;font-weight:500">${p.name}</td><td style="font-size:.7rem">${gate}</td><td><span class="badge ${gClass}">${gLabel}</span></td></tr>`;
+    }).join('')||'<tr><td colspan="3" style="text-align:center;color:var(--mist);padding:16px">No projects</td></tr>'}
+  </tbody></table></div>`;
+
+  // Policy Compliance
+  const pillars=['Security','Privacy','Finance','HR','Audit'];
+  const pillarMap={Security:'🔒',Privacy:'🛡️',Finance:'💰',HR:'👥',Audit:'📋'};
+  document.getElementById('gov-policies').innerHTML=projects.length?
+    `<div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+      ${pillars.map(p=>`<span style="font-size:.6rem;color:var(--mist);flex:1;text-align:center;min-width:32px">${p}</span>`).join('')}
+     </div>`+
+    projects.map(p=>{
+      const seed=p.id+p.name.length;
+      const checks=pillars.map((_,i)=>{
+        const s=(seed*(i+1)*7)%100;
+        if(p.status==='Off Track') return s>70?'fail':'warn';
+        if(p.status==='At Risk') return s>80?'warn':'ok';
+        if(p.status==='Planning') return s>60?'na':'ok';
+        return s>90?'warn':'ok';
+      });
+      return `<div class="policy-row">
+        <div class="policy-name">${p.name}</div>
+        <div class="policy-checks">${checks.map(c=>`<div class="chk chk-${c}" title="${{ok:'Compliant',warn:'Review needed',fail:'Non-compliant',na:'N/A'}[c]}">${{ok:'✓',warn:'!',fail:'✗',na:'–'}[c]}</div>`).join('')}</div>
+      </div>`;
+    }).join(''):
+    '<p style="color:var(--mist);font-size:.75rem">No projects yet</p>';
+
+  // Decision Log
+  document.getElementById('gov-decisions').innerHTML=decisions.length?
+    decisions.slice(0,5).map((d,i)=>`
+      <div class="decision-item">
+        <div class="dec-type dec-${d.type.toLowerCase()}">${d.type}</div>
+        <div class="dec-body">
+          <div class="dec-title">${d.title}</div>
+          <div class="dec-meta">${d.project} · ${d.maker} · ${fmt(d.date)}</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="btn btn-outline btn-sm" onclick="editDecision(${i})">Edit</button>
+          <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="deleteDecision(${i})">Del</button>
+        </div>
+      </div>`).join('')+
+    `<button class="btn btn-outline btn-sm" style="margin-top:12px;width:100%;justify-content:center" onclick="openDecisionModal()">+ Log Decision</button>`:
+    `<p style="color:var(--mist);font-size:.75rem;margin-bottom:12px">No decisions logged yet</p>
+     <button class="btn btn-outline btn-sm" onclick="openDecisionModal()">+ Log Decision</button>`;
+
+  // Change Requests
+  document.getElementById('gov-cr-sub').textContent=`${pendingCRs} pending CCB review`;
+  document.getElementById('gov-crs').innerHTML=changeReqs.length?
+    changeReqs.map((c,i)=>`
+      <div class="cr-row">
+        <div class="cr-id">CR-${String(c.id).padStart(3,'0')}</div>
+        <div class="cr-title">${c.title}<div style="font-size:.62rem;color:var(--mist)">${c.project} · ${c.type}</div></div>
+        <div><span class="cr-impact cr-${c.impact[0].toLowerCase()}">${c.impact}</span></div>
+        <span class="badge ${c.status==='Pending'?'badge-risk':c.status==='Approved'?'badge-on':'badge-off'}">${c.status}</span>
+        <div style="display:flex;gap:3px;flex-shrink:0;flex-wrap:wrap">
+          ${c.status==='Pending'?`<button class="btn btn-sm" style="background:#dcfce7;color:#166534;border:none" onclick="setCRStatus(${i},'Approved')">✓</button><button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="setCRStatus(${i},'Rejected')">✗</button>`:''}
+          <button class="btn btn-outline btn-sm" onclick="editCR(${i})">Edit</button>
+          <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="deleteCR(${i})">Del</button>
+        </div>
+      </div>`).join('')+
+    `<button class="btn btn-outline btn-sm" style="margin-top:12px;width:100%;justify-content:center" onclick="openCRModal()">+ Submit CR</button>`:
+    `<p style="color:var(--mist);font-size:.75rem;margin-bottom:12px">No change requests</p>
+     <button class="btn btn-outline btn-sm" onclick="openCRModal()">+ Submit CR</button>`;
+
+  // Governance Calendar
+  const now=new Date();
+  document.getElementById('gov-cal').innerHTML=calEvents.map((e,i)=>{
+    const d=new Date(now.getTime()+e.days*86400000);
+    return `<div class="gov-cal-item">
+      <div class="cal-date-box"><div class="cal-day">${d.getDate()}</div><div class="cal-mon">${MONTHS[d.getMonth()]}</div></div>
+      <div class="cal-body"><div class="cal-title">${e.title}</div><div class="cal-sub">${e.sub}</div></div>
+      <div style="display:flex;gap:3px;flex-shrink:0">
+        <button class="btn btn-outline btn-sm" onclick="openCalModal(${i})">Edit</button>
+        <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="deleteCalEvent(${i})">Del</button>
+      </div>
+    </div>`;
+  }).join('')+`<button class="btn btn-outline btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="openCalModal()">+ Add Event</button>`;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PROJECTS
+// ════════════════════════════════════════════════════════════════════
+function renderProjects(){
+  const filter=document.getElementById('filter-status').value;
+  const search=(document.getElementById('search-proj').value||'').toLowerCase();
+  const list=projects.filter(p=>{
+    if(filter&&p.status!==filter) return false;
+    if(search&&!p.name.toLowerCase().includes(search)&&!p.pm.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  document.getElementById('projects-tbody').innerHTML=list.map(p=>`
+    <tr>
+      <td><strong>${p.name}</strong><br><small style="color:var(--mist);font-size:.63rem">${p.desc||''}</small></td>
+      <td style="font-size:.7rem">${p.type}</td>
+      <td>${badgeHTML(p.status)}</td>
+      <td><div class="prog-wrap" style="width:70px"><div class="prog-fill" style="width:${p.progress}%"></div></div> <small style="font-size:.6rem;color:var(--mist)">${p.progress}%</small></td>
+      <td style="font-size:.73rem;white-space:nowrap">${CFG.currency}${(p.budget/1000).toFixed(0)}k</td>
+      <td style="white-space:nowrap;font-size:.7rem">${fmt(p.start)}</td>
+      <td style="white-space:nowrap;font-size:.7rem">${fmt(p.end)}</td>
+      <td style="font-size:.7rem">${p.pm}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-outline btn-sm" onclick="editProject(${projects.indexOf(p)})">Edit</button>
+        <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none;margin-left:4px" onclick="deleteProject(${projects.indexOf(p)})">Del</button>
+      </td>
+    </tr>`).join('')||noData(9);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// GANTT
+// ════════════════════════════════════════════════════════════════════
+function renderGantt(){
+  const now=new Date();
+  const baseYear=now.getFullYear(), startMonth=now.getMonth();
+  const months=[];
+  for(let i=0;i<12;i++){const d=new Date(baseYear,startMonth+i,1);months.push({label:MONTHS[d.getMonth()]+'\''+String(d.getFullYear()).slice(2)});}
+  const rangeStart=new Date(baseYear,startMonth,1);
+  const rangeEnd=new Date(baseYear,startMonth+12,0);
+  const totalDays=(rangeEnd-rangeStart)/86400000;
+  const todayPct=Math.max(0,Math.min(100,((now-rangeStart)/86400000/totalDays)*100));
+  document.getElementById('gantt-range').textContent=`${MONTHS[startMonth]} ${baseYear} — ${MONTHS[(startMonth+11)%12]} ${baseYear+(startMonth+11>=12?1:0)}`;
+  document.getElementById('gantt-months').innerHTML=months.map(m=>`<div class="gantt-month">${m.label}</div>`).join('');
+  document.getElementById('gantt-body').innerHTML=projects.map((p,i)=>{
+    const ps=new Date(p.start),pe=new Date(p.end);
+    const bs=Math.max(0,((ps-rangeStart)/86400000/totalDays)*100);
+    const be=Math.min(100,((pe-rangeStart)/86400000/totalDays)*100);
+    const bw=Math.max(1,be-bs);
+    const cls=['','gold','green','blue','purple','',''][i%7];
+    return `<div class="gantt-row">
+      <div class="gantt-row-label">${p.name}<small>${p.pm}</small></div>
+      <div class="gantt-timeline">
+        <div class="today-line" style="left:${todayPct}%"></div>
+        ${bs<100&&be>0?`<div class="gantt-bar ${cls}" style="left:${bs}%;width:${bw}%;animation:fadeUp .4s ${.05*i+.1}s var(--ease) both">
+          <span class="gantt-bar-label">${p.progress}% · ${p.name}</span></div>`:''}
+      </div>
+    </div>`;
+  }).join('')||'<div style="padding:24px;text-align:center;color:var(--mist)">Add projects to see timeline</div>';
+}
+
+// ════════════════════════════════════════════════════════════════════
+// MILESTONES
+// ════════════════════════════════════════════════════════════════════
+function renderMilestones(){
+  const now=new Date();
+  const content=document.getElementById('milestone-content');
+  // Build per-project milestone columns
+  const projectBlocks=projects.map(p=>{
+    const start=new Date(p.start),end=new Date(p.end),dur=(end-start)/86400000;
+    const autoMs=[
+      {name:'Project Kickoff',date:start,done:true,auto:true},
+      {name:'Phase 1 Complete',date:new Date(start.getTime()+dur*.25*86400000),done:now>new Date(start.getTime()+dur*.25*86400000),auto:true},
+      {name:'Mid-Point Review',date:new Date(start.getTime()+dur*.5*86400000),done:p.progress>=50,auto:true},
+      {name:'Phase 2 Complete',date:new Date(start.getTime()+dur*.75*86400000),done:p.progress>=75,auto:true},
+      {name:'Project Closure',date:end,done:p.status==='Completed',auto:true},
+    ];
+    const custom=customMilestones.filter(m=>m.project===p.name).map((m,ci)=>{
+      const realIdx=customMilestones.indexOf(m);
+      return {...m,auto:false,realIdx};
+    });
+    const ms=[...autoMs,...custom].sort((a,b)=>new Date(a.date)-new Date(b.date));
+    return `<div>
+      <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:.85rem;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
+        ${p.name}
+        <button class="btn btn-outline btn-sm" onclick="openMilestoneModal();document.getElementById('ml-project').value='${p.name.replace(/'/g,"\\'")}'" style="font-size:.6rem;padding:3px 7px">+ Add</button>
+      </div>
+      ${ms.map((m,mi)=>`
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;${mi<ms.length-1?'border-left:2px solid var(--border);margin-left:5px;padding-left:16px':'padding-left:18px'}">
+          <div style="width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-left:${mi<ms.length-1?'-17px':'-1px'};margin-top:3px;background:${m.done?'#22c55e':now>new Date(m.date)?'var(--accent)':'var(--border)'};border:2px solid var(--card);cursor:${m.auto?'default':'pointer'};transition:background .3s" ${!m.auto?`onclick="toggleMilestoneDone(${m.realIdx})" title="Toggle done"`:''} ></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.76rem;font-weight:500">${m.name}${m.auto?'':` <span style="font-size:.58rem;color:var(--mist)">(custom)</span>`}</div>
+            <div style="font-size:.62rem;color:var(--mist)">${new Date(m.date).toLocaleDateString(CFG.dateFmt,{month:'short',day:'numeric',year:'numeric'})}</div>
+          </div>
+          ${!m.auto?`<div style="display:flex;gap:3px;flex-shrink:0"><button class="btn btn-outline btn-sm" style="font-size:.58rem;padding:2px 5px" onclick="openMilestoneModal(${m.realIdx})">Edit</button><button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none;font-size:.58rem;padding:2px 5px" onclick="deleteMilestone(${m.realIdx})">Del</button></div>`:''}
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+  if(!projects.length){content.innerHTML='<p style="color:var(--mist);font-size:.78rem">No projects yet. Add a project first.</p>';return;}
+  // Standalone custom milestones (no matching project)
+  const orphans=customMilestones.filter(m=>!projects.find(p=>p.name===m.project));
+  const orphanBlock=orphans.length?`<div>
+    <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:.85rem;margin-bottom:14px">Other Milestones</div>
+    ${orphans.map((m,i)=>{const ri=customMilestones.indexOf(m);return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><div style="width:10px;height:10px;border-radius:50%;background:${m.done?'#22c55e':'var(--border)'}"></div><div style="flex:1;font-size:.75rem">${m.name}<div style="font-size:.6rem;color:var(--mist)">${m.project}·${new Date(m.date).toLocaleDateString(CFG.dateFmt,{month:'short',day:'numeric'})}</div></div><button class="btn btn-outline btn-sm" onclick="openMilestoneModal(${ri})">Edit</button><button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="deleteMilestone(${ri})">Del</button></div>`;}).join('')}
+  </div>`:'';
+  content.innerHTML=projectBlocks+(orphanBlock||'');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// RISKS
+// ════════════════════════════════════════════════════════════════════
+function renderRisks(){
+  document.getElementById('risks-tbody').innerHTML=risks.map((r,i)=>`
+    <tr>
+      <td><strong>${r.title}</strong></td>
+      <td style="font-size:.7rem">${r.project}</td>
+      <td style="font-size:.7rem">${r.cat}</td>
+      <td>${sevBadge(r.sev)}</td>
+      <td>${probBadge(r.prob)}</td>
+      <td style="font-size:.7rem">${r.owner}</td>
+      <td style="font-size:.66rem;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.mit}">${r.mit}</td>
+      <td><span class="badge ${r.status==='Open'?'badge-risk':'badge-done'}">${r.status}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm" style="background:${r.status==='Open'?'#dcfce7':'#fee2e2'};color:${r.status==='Open'?'#166534':'#991b1b'};border:none;border-radius:6px" onclick="toggleRisk(${i})">${r.status==='Open'?'Mitigate':'Reopen'}</button>
+        <button class="btn btn-outline btn-sm" style="margin-left:3px" onclick="editRisk(${i})">Edit</button>
+        <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none;margin-left:3px" onclick="deleteRisk(${i})">Del</button>
+      </td>
+    </tr>`).join('')||noData(9);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// BUDGET
+// ════════════════════════════════════════════════════════════════════
+function renderBudget(){
+  const total=projects.reduce((s,p)=>s+p.budget,0);
+  const spent=projects.reduce((s,p)=>s+p.spent,0);
+  const rem=total-spent;
+  const r=70,cx=90,cy=90,circ=2*Math.PI*r;
+  const spentPct=total>0?(spent/total):0;
+  const cur=CFG.currency;
+  document.getElementById('donut-area').innerHTML=`
+    <svg class="donut" width="180" height="180" viewBox="0 0 180 180">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#eee" stroke-width="18"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--accent)" stroke-width="18"
+        stroke-dasharray="${circ*spentPct} ${circ*(1-spentPct)}" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div style="font-family:'Inter',sans-serif;font-weight:800;font-size:1.6rem">${cur}${(total/1e6).toFixed(2)}M</div>
+      <div style="font-size:.63rem;color:var(--mist);margin-bottom:12px">Total Portfolio</div>
+      <div class="donut-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Spent: ${cur}${(spent/1000).toFixed(0)}k (${Math.round(spentPct*100)}%)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#eee;border:1px solid #ddd"></div>Remaining: ${cur}${(rem/1000).toFixed(0)}k</div>
+      </div>
+    </div>`;
+  document.getElementById('budget-rows').innerHTML=projects.map((p,pi)=>{
+    const pct=p.budget>0?Math.min(100,Math.round((p.spent/p.budget)*100)):0;
+    const over=p.spent>p.budget;
+    return `<div class="budget-row">
+      <div class="budget-name">${p.name}<br><small style="color:var(--mist);font-size:.6rem">${p.type}</small></div>
+      <div><div class="util-label"><span>${cur}${(p.spent/1000).toFixed(0)}k / ${cur}${(p.budget/1000).toFixed(0)}k</span><span style="color:${over?'#ef4444':'var(--mist)'}">${pct}%</span></div>
+      <div class="util-bar"><div class="util-fill" style="width:${pct}%;background:${over?'#ef4444':pct>80?'#f59e0b':'#22c55e'}"></div></div></div>
+      <div style="font-size:.7rem;color:var(--mist);white-space:nowrap">${cur}${(p.budget/1000).toFixed(0)}k</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <div style="font-size:.7rem;color:${over?'#ef4444':'var(--ink)'};white-space:nowrap;font-weight:${over?600:400}">${cur}${((p.budget-p.spent)/1000).toFixed(0)}k left</div>
+        <button class="btn btn-outline btn-sm" style="font-size:.58rem;padding:2px 7px" onclick="openBudgetModal(${pi})">Edit</button>
+      </div>
+    </div>`;
+  }).join('')||'<p style="color:var(--mist);font-size:.76rem;padding:12px">No projects yet</p>';
+}
+
+// ════════════════════════════════════════════════════════════════════
+// RESOURCES
+// ════════════════════════════════════════════════════════════════════
+function renderResources(){
+  // Merge: explicit resources + auto-derived PMs
+  const pms={};
+  projects.forEach(p=>{if(!pms[p.pm])pms[p.pm]={name:p.pm,count:0,types:new Set(),projects:[]};pms[p.pm].count++;pms[p.pm].types.add(p.type);pms[p.pm].projects.push(p);});
+  // Build display list: explicit resources take priority, then project-derived PMs not already listed
+  const explicitNames=new Set(resources.map(r=>r.name));
+  const derivedPMs=Object.values(pms).filter(pm=>!explicitNames.has(pm.name));
+  const allCards=[
+    ...resources.map((r,i)=>({type:'explicit',r,i})),
+    ...derivedPMs.map((pm,i)=>({type:'derived',pm,i}))
+  ];
+  const grid=document.getElementById('resource-grid');
+  if(!allCards.length){
+    grid.innerHTML='<p style="color:var(--mist);font-size:.78rem;grid-column:1/-1">No resources. Add a resource or assign PMs to projects.</p>';return;
+  }
+  grid.innerHTML=allCards.map(({type,r,pm,i},ci)=>{
+    if(type==='explicit'){
+      const initials=r.name.split(' ').map(n=>n[0]).join('');
+      const util=Math.min(100,r.util);
+      const proj=projects.filter(p=>p.name===r.project||p.pm===r.name);
+      return `<div class="resource-card">
+        <div class="rc-head">
+          <div class="avatar" style="background:${AVT_COLORS[ci%AVT_COLORS.length]}">${initials}</div>
+          <div style="flex:1;min-width:0"><div class="rc-name">${r.name}</div><div class="rc-role">${r.role}</div>${r.dept?`<div style="font-size:.58rem;color:var(--mist)">${r.dept}</div>`:''}</div>
+          <div style="display:flex;gap:4px;flex-shrink:0">
+            <button class="btn btn-outline btn-sm" style="font-size:.6rem;padding:3px 7px" onclick="openResourceModal(${i})">Edit</button>
+            <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none;font-size:.6rem;padding:3px 7px" onclick="deleteResource(${i})">Del</button>
+          </div>
+        </div>
+        ${r.email?`<div style="font-size:.62rem;color:var(--mist);margin-bottom:6px">✉ ${r.email}</div>`:''}
+        ${proj.map(p=>`<div style="font-size:.66rem;padding:4px 0;border-bottom:1px solid var(--border)">${p.name} <span style="color:var(--mist)">${p.progress}%</span></div>`).join('')}
+        <div class="util-bar-wrap">
+          <div class="util-label"><span>Utilization</span><span>${util}%</span></div>
+          <div class="util-bar"><div class="util-fill" style="width:${util}%;background:${util>85?'#ef4444':util>65?'#f59e0b':'#22c55e'}"></div></div>
+        </div>
+      </div>`;
+    } else {
+      const initials=pm.name.split(' ').map(n=>n[0]).join('');
+      const util=Math.min(100,pm.count*20+Math.floor((pm.name.length*13)%20));
+      return `<div class="resource-card">
+        <div class="rc-head">
+          <div class="avatar" style="background:${AVT_COLORS[ci%AVT_COLORS.length]}">${initials}</div>
+          <div style="flex:1;min-width:0"><div class="rc-name">${pm.name}</div><div class="rc-role">${[...pm.types][0]||'Project Manager'}</div></div>
+          <button class="btn btn-outline btn-sm" style="font-size:.6rem;padding:3px 7px;flex-shrink:0" onclick="openResourceModal();document.getElementById('res-name').value='${pm.name.replace(/'/g,"\\'")}'" title="Save as explicit resource">Save</button>
+        </div>
+        <div style="font-size:.7rem;color:var(--mist);margin-bottom:8px">${pm.count} project${pm.count!==1?'s':''} (auto-derived)</div>
+        ${pm.projects.map(p=>`<div style="font-size:.66rem;padding:4px 0;border-bottom:1px solid var(--border)">${p.name} <span style="color:var(--mist)">${p.progress}%</span></div>`).join('')}
+        <div class="util-bar-wrap">
+          <div class="util-label"><span>Utilization</span><span>${util}%</span></div>
+          <div class="util-bar"><div class="util-fill" style="width:${util}%;background:${util>85?'#ef4444':util>65?'#f59e0b':'#22c55e'}"></div></div>
+        </div>
+      </div>`;
+    }
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// MODALS
+// ════════════════════════════════════════════════════════════════════
+function openAddModal(){
+  if(currentPanel==='risks'){
+    editRiskIdx=-1;
+    document.getElementById('r-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('')||'<option>No projects</option>';
+    document.querySelector('#modal-risk h2').textContent='Add Risk';
+    ['r-title','r-owner','r-mit'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('r-sev').value='Medium';document.getElementById('r-prob').value='Medium';document.getElementById('r-cat').value='Technical';
+    document.getElementById('modal-risk').classList.add('open');
+  } else if(currentPanel==='governance'){
+    openDecisionModal();
+  } else if(currentPanel==='milestones'){
+    openMilestoneModal();
+  } else if(currentPanel==='resources'){
+    openResourceModal();
+  } else if(currentPanel==='budget'){
+    openBudgetModal();
+  } else {
+    editIdx=-1;
+    document.getElementById('modal-title').textContent='Add New Project';
+    ['f-name','f-pm','f-budget','f-progress','f-desc'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-status').value='Planning';
+    const now=new Date(),end=new Date();end.setMonth(end.getMonth()+6);
+    document.getElementById('f-start').value=now.toISOString().slice(0,10);
+    document.getElementById('f-end').value=end.toISOString().slice(0,10);
+    document.getElementById('modal-project').classList.add('open');
+  }
+}
+
+function openMilestoneModal(i){
+  editResIdx=i===undefined?-1:i;
+  const m=i!==undefined?customMilestones[i]:{};
+  document.getElementById('ml-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('')||'<option>No projects</option>';
+  document.getElementById('ml-name').value=m.name||'';
+  document.getElementById('ml-date').value=m.date||new Date().toISOString().slice(0,10);
+  document.getElementById('ml-project').value=m.project||'';
+  document.getElementById('ml-done').value=m.done?'true':'false';
+  document.querySelector('#modal-milestone h2').textContent=i!==undefined?'Edit Milestone':'Add Milestone';
+  document.getElementById('modal-milestone').classList.add('open');
+}
+function saveMilestone(){
+  const name=document.getElementById('ml-name').value.trim();
+  if(!name){toast('Milestone name required');return;}
+  const obj={id:editResIdx>=0?customMilestones[editResIdx].id:Date.now(),name,project:document.getElementById('ml-project').value,date:document.getElementById('ml-date').value,done:document.getElementById('ml-done').value==='true'};
+  if(editResIdx>=0) customMilestones[editResIdx]=obj; else customMilestones.push(obj);
+  save();closeModal('modal-milestone');renderPanel('milestones');toast(editResIdx>=0?'Milestone updated':'Milestone added');
+}
+function deleteMilestone(i){if(!confirm(`Delete "${customMilestones[i].name}"?`))return;customMilestones.splice(i,1);save();renderPanel('milestones');toast('Milestone deleted');}
+function toggleMilestoneDone(i){customMilestones[i].done=!customMilestones[i].done;save();renderPanel('milestones');}
+
+function openResourceModal(i){
+  const r=i!==undefined?resources[i]:{};
+  editResIdx=i===undefined?-1:i;
+  document.getElementById('res-name').value=r.name||'';
+  document.getElementById('res-role').value=r.role||'Project Manager';
+  document.getElementById('res-dept').value=r.dept||'';
+  document.getElementById('res-email').value=r.email||'';
+  document.getElementById('res-util').value=r.util||50;
+  document.getElementById('res-project').innerHTML=(['(None)',...projects.map(p=>p.name)]).map(n=>`<option>${n}</option>`).join('');
+  document.getElementById('res-project').value=r.project||'(None)';
+  document.querySelector('#modal-resource h2').textContent=i!==undefined?'Edit Resource':'Add Resource';
+  document.getElementById('modal-resource').classList.add('open');
+}
+function saveResource(){
+  const name=document.getElementById('res-name').value.trim();
+  if(!name){toast('Resource name required');return;}
+  const obj={id:editResIdx>=0?resources[editResIdx].id:Date.now(),name,role:document.getElementById('res-role').value,dept:document.getElementById('res-dept').value,email:document.getElementById('res-email').value,util:+document.getElementById('res-util').value||50,project:document.getElementById('res-project').value};
+  if(editResIdx>=0) resources[editResIdx]=obj; else resources.push(obj);
+  save();closeModal('modal-resource');renderPanel('resources');toast(editResIdx>=0?'Resource updated':'Resource added');
+}
+function deleteResource(i){if(!confirm(`Remove "${resources[i].name}"?`))return;resources.splice(i,1);save();renderPanel('resources');toast('Resource removed');}
+
+function openBudgetModal(i){
+  const p=i!==undefined?projects[i]:{};
+  editIdx=i===undefined?-1:i;
+  document.getElementById('bud-project').innerHTML=projects.map((pr,pi)=>`<option value="${pi}">${pr.name}</option>`).join('');
+  if(i!==undefined) document.getElementById('bud-project').value=i;
+  document.getElementById('bud-budget').value=p.budget||0;
+  document.getElementById('bud-spent').value=p.spent||0;
+  document.getElementById('modal-budget').classList.add('open');
+}
+function saveBudget(){
+  const idx=+document.getElementById('bud-project').value;
+  if(isNaN(idx)||!projects[idx]){toast('Select a project');return;}
+  projects[idx].budget=+document.getElementById('bud-budget').value||0;
+  projects[idx].spent=+document.getElementById('bud-spent').value||0;
+  save();closeModal('modal-budget');renderPanel('budget');toast('Budget updated');
+}
+
+function editRisk(i){
+  editRiskIdx=i;const r=risks[i];
+  document.getElementById('r-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('')||'<option>No projects</option>';
+  document.getElementById('r-title').value=r.title;
+  document.getElementById('r-project').value=r.project;
+  document.getElementById('r-cat').value=r.cat;
+  document.getElementById('r-sev').value=r.sev;
+  document.getElementById('r-prob').value=r.prob;
+  document.getElementById('r-owner').value=r.owner;
+  document.getElementById('r-mit').value=r.mit;
+  document.querySelector('#modal-risk h2').textContent='Edit Risk';
+  document.getElementById('modal-risk').classList.add('open');
+}
+function deleteRisk(i){if(!confirm(`Delete risk "${risks[i].title}"?`))return;risks.splice(i,1);save();renderPanel('risks');toast('Risk deleted');}
+
+function editDecision(i){
+  editDecIdx=i;const d=decisions[i];
+  document.getElementById('d-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('')||'<option>General</option>';
+  document.getElementById('d-title').value=d.title;
+  document.getElementById('d-project').value=d.project;
+  document.getElementById('d-type').value=d.type;
+  document.getElementById('d-maker').value=d.maker;
+  document.getElementById('d-date').value=d.date;
+  document.getElementById('d-impact').value=d.impact;
+  document.getElementById('d-rationale').value=d.rationale||'';
+  document.querySelector('#modal-decision h2').textContent='Edit Decision';
+  document.getElementById('modal-decision').classList.add('open');
+}
+function deleteDecision(i){if(!confirm('Delete this decision?'))return;decisions.splice(i,1);save();renderPanel('governance');toast('Decision deleted');}
+
+function editCR(i){
+  editCRIdx=i;const c=changeReqs[i];
+  document.getElementById('cr-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('')||'<option>General</option>';
+  document.getElementById('cr-title').value=c.title;
+  document.getElementById('cr-project').value=c.project;
+  document.getElementById('cr-type').value=c.type;
+  document.getElementById('cr-impact').value=c.impact;
+  document.getElementById('cr-by').value=c.by;
+  document.getElementById('cr-date').value=c.date;
+  document.getElementById('cr-desc').value=c.desc||'';
+  document.querySelector('#modal-cr h2').textContent='Edit Change Request';
+  document.getElementById('modal-cr').classList.add('open');
+}
+function deleteCR(i){if(!confirm('Delete this change request?'))return;changeReqs.splice(i,1);save();renderPanel('governance');toast('CR deleted');}
+function setCRStatus(i,s){changeReqs[i].status=s;save();renderPanel('governance');toast('CR status updated to '+s);}
+
+function openCalModal(i){
+  const e=i!==undefined?calEvents[i]:{};
+  editResIdx=i===undefined?-1:i;
+  document.getElementById('cal-title').value=e.title||'';
+  document.getElementById('cal-sub').value=e.sub||'';
+  document.getElementById('cal-days').value=e.days||7;
+  document.querySelector('#modal-cal h2').textContent=i!==undefined?'Edit Calendar Event':'Add Calendar Event';
+  document.getElementById('modal-cal').classList.add('open');
+}
+function saveCalEvent(){
+  const title=document.getElementById('cal-title').value.trim();
+  if(!title){toast('Event title required');return;}
+  const obj={title,sub:document.getElementById('cal-sub').value,days:+document.getElementById('cal-days').value||7};
+  if(editResIdx>=0) calEvents[editResIdx]=obj; else calEvents.push(obj);
+  save();closeModal('modal-cal');renderPanel('governance');toast('Calendar updated');
+}
+function deleteCalEvent(i){calEvents.splice(i,1);save();renderPanel('governance');toast('Event removed');}
+
+function inlineEdit(el, onSave){
+  const orig=el.textContent;
+  el.contentEditable=true;el.style.outline='2px solid var(--accent)';el.style.borderRadius='3px';el.focus();
+  const finish=()=>{el.contentEditable=false;el.style.outline='';el.style.borderRadius='';const v=el.textContent.trim();if(v&&v!==orig)onSave(v);else el.textContent=orig;};
+  el.onblur=finish;el.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();finish();}if(e.key==='Escape'){el.textContent=orig;el.contentEditable=false;el.style.outline='';}};
+}
+function openDecisionModal(){
+  editDecIdx=-1;
+  document.getElementById('d-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('')||'<option>General</option>';
+  document.getElementById('d-date').value=new Date().toISOString().slice(0,10);
+  ['d-title','d-maker','d-rationale'].forEach(id=>document.getElementById(id).value='');
+  document.querySelector('#modal-decision h2').textContent='Log Decision';
+  document.getElementById('modal-decision').classList.add('open');
+}
+
+function openCRModal(){
+  editCRIdx=-1;
+  document.getElementById('cr-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('')||'<option>General</option>';
+  document.getElementById('cr-date').value=new Date().toISOString().slice(0,10);
+  ['cr-title','cr-by','cr-desc'].forEach(id=>document.getElementById(id).value='');
+  document.querySelector('#modal-cr h2').textContent='Submit Change Request';
+  document.getElementById('modal-cr').classList.add('open');
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+
+function editProject(i){
+  editIdx=i;const p=projects[i];
+  document.getElementById('modal-title').textContent='Edit Project';
+  document.getElementById('f-name').value=p.name;
+  document.getElementById('f-pm').value=p.pm;
+  document.getElementById('f-type').value=p.type;
+  document.getElementById('f-status').value=p.status;
+  document.getElementById('f-start').value=p.start;
+  document.getElementById('f-end').value=p.end;
+  document.getElementById('f-budget').value=p.budget;
+  document.getElementById('f-progress').value=p.progress;
+  document.getElementById('f-desc').value=p.desc||'';
+  document.getElementById('modal-project').classList.add('open');
+}
+
+function saveProject(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){toast('Project name is required');return;}
+  const obj={
+    id:editIdx>=0?projects[editIdx].id:Date.now(),name,
+    type:document.getElementById('f-type').value,
+    pm:document.getElementById('f-pm').value||'Unassigned',
+    status:document.getElementById('f-status').value,
+    start:document.getElementById('f-start').value,
+    end:document.getElementById('f-end').value,
+    budget:+(document.getElementById('f-budget').value)||0,
+    spent:editIdx>=0?projects[editIdx].spent:0,
+    progress:+(document.getElementById('f-progress').value)||0,
+    desc:document.getElementById('f-desc').value,
+  };
+  if(editIdx>=0) projects[editIdx]=obj; else projects.push(obj);
+  save();closeModal('modal-project');renderPanel(currentPanel);toast(editIdx>=0?'Project updated':'Project added');
+}
+
+function deleteProject(i){if(!confirm(`Delete "${projects[i].name}"?`))return;projects.splice(i,1);save();renderPanel(currentPanel);toast('Project deleted');}
+
+function saveRisk(){
+  const title=document.getElementById('r-title').value.trim();
+  if(!title){toast('Risk title required');return;}
+  const obj={id:editRiskIdx>=0?risks[editRiskIdx].id:Date.now(),title,project:document.getElementById('r-project').value,cat:document.getElementById('r-cat').value,sev:document.getElementById('r-sev').value,prob:document.getElementById('r-prob').value,owner:document.getElementById('r-owner').value,mit:document.getElementById('r-mit').value,status:editRiskIdx>=0?risks[editRiskIdx].status:'Open'};
+  if(editRiskIdx>=0) risks[editRiskIdx]=obj; else risks.push(obj);
+  editRiskIdx=-1;
+  save();closeModal('modal-risk');renderPanel(currentPanel);toast(editRiskIdx>=0?'Risk updated':'Risk logged');
+}
+
+function saveDecision(){
+  const title=document.getElementById('d-title').value.trim();
+  if(!title){toast('Decision title required');return;}
+  const obj={id:editDecIdx>=0?decisions[editDecIdx].id:Date.now(),title,project:document.getElementById('d-project').value,type:document.getElementById('d-type').value,maker:document.getElementById('d-maker').value,date:document.getElementById('d-date').value,impact:document.getElementById('d-impact').value,rationale:document.getElementById('d-rationale').value};
+  if(editDecIdx>=0) decisions[editDecIdx]=obj; else decisions.unshift(obj);
+  editDecIdx=-1;
+  save();closeModal('modal-decision');renderPanel(currentPanel);toast(editDecIdx>=0?'Decision updated':'Decision logged');
+}
+
+function saveCR(){
+  const title=document.getElementById('cr-title').value.trim();
+  if(!title){toast('CR title required');return;}
+  const obj={id:editCRIdx>=0?changeReqs[editCRIdx].id:Date.now(),title,project:document.getElementById('cr-project').value,type:document.getElementById('cr-type').value,impact:document.getElementById('cr-impact').value,by:document.getElementById('cr-by').value,date:document.getElementById('cr-date').value,desc:document.getElementById('cr-desc').value,status:editCRIdx>=0?changeReqs[editCRIdx].status:'Pending'};
+  if(editCRIdx>=0) changeReqs[editCRIdx]=obj; else changeReqs.unshift(obj);
+  editCRIdx=-1;
+  save();closeModal('modal-cr');renderPanel(currentPanel);toast(editCRIdx>=0?'CR updated':'Change request submitted');
+}
+
+function toggleRisk(i){risks[i].status=risks[i].status==='Open'?'Mitigated':'Open';save();renderPanel('risks');toast('Risk status updated');}
+
+// ════════════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════════════
+function badgeHTML(s){const m={'On Track':'badge-on','At Risk':'badge-risk','Off Track':'badge-off','Planning':'badge-plan','Completed':'badge-done'};return`<span class="badge ${m[s]||'badge-plan'}">${s}</span>`;}
+function sevBadge(s){const m={Critical:'badge-off',High:'badge-off',Medium:'badge-risk',Low:'badge-done'};return`<span class="badge ${m[s]||'badge-plan'}">${s}</span>`;}
+function probBadge(s){const m={High:'badge-risk',Medium:'badge-plan',Low:'badge-done'};return`<span class="badge ${m[s]||'badge-plan'}">${s}</span>`;}
+function fmt(d){if(!d)return'—';try{const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString(CFG.dateFmt,{month:'short',day:'numeric',year:'numeric'});}catch{return d;}}
+function noData(cols){return`<tr><td colspan="${cols}" style="text-align:center;color:var(--mist);padding:24px">No data</td></tr>`;}
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+
+function exportData(){
+  const data={projects,risks,decisions,changeReqs,config:CFG,exported:new Date().toISOString()};
+  const a=document.createElement('a');
+  a.href='data:application/json,'+encodeURIComponent(JSON.stringify(data,null,2));
+  a.download='governance-export.json';a.click();toast('Data exported');
+}
+
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('show');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+
+document.querySelectorAll('.modal-bg').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+
+// ════════════════════════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  seedData();
+  save();
+  applyConfig();
+  renderDashboard();
+  setTimeout(()=>{
+    document.getElementById('loader').classList.add('out');
+    setTimeout(()=>{document.getElementById('loader').style.display='none';},500);
+    document.getElementById('app').classList.add('show');
+  },1400);
+});
+</script>
+</body>
+</html>
