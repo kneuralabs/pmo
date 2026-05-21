@@ -1654,6 +1654,11 @@ function toggleTheme(){
 const GH_REPO='kneuralabs/pmo', GH_FILE='DATA.xlsx';
 let ghSha=null,ghData=[],ghHeaders=[],editDataIdx=-1;
 
+function _ghToken(){
+  const raw=localStorage.getItem('gh-token');
+  return raw?atob(raw):null;
+}
+
 function renderDataSync(){
   const stored=localStorage.getItem('gh-token');
   if(stored){
@@ -1661,58 +1666,88 @@ function renderDataSync(){
     document.getElementById('gh-load-btn').disabled=false;
     document.getElementById('gh-status').textContent='Token loaded. Click Load DATA.xlsx.';
   }
-  if(ghData.length) _renderDataTable();
+  if(ghSha!==null) _renderDataTable();
 }
 
 function ghSaveToken(){
   const v=document.getElementById('gh-token').value.trim();
   if(!v||v==='••••••••'){toast('Enter a valid GitHub token');return;}
-  localStorage.setItem('gh-token',btoa(unescape(encodeURIComponent(v))));
+  localStorage.setItem('gh-token',btoa(v));
   document.getElementById('gh-load-btn').disabled=false;
   document.getElementById('gh-status').textContent='Token saved. Click Load DATA.xlsx.';
   toast('Token saved');
 }
 
 async function ghLoadData(){
-  const raw=localStorage.getItem('gh-token');
-  if(!raw){toast('Connect first');return;}
-  const token=decodeURIComponent(escape(atob(raw)));
-  document.getElementById('gh-status').textContent='Loading…';
+  const token=_ghToken();
+  if(!token){toast('Connect first — enter your GitHub token');return;}
+  const btn=document.getElementById('gh-load-btn');
+  btn.disabled=true;btn.textContent='Loading…';
+  document.getElementById('gh-status').textContent='Fetching DATA.xlsx from GitHub…';
   try{
     const res=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`,{
       headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'}
     });
-    if(!res.ok) throw new Error(res.status+' '+res.statusText);
+    if(!res.ok){
+      const err=await res.json().catch(()=>({message:res.statusText}));
+      throw new Error(res.status+': '+(err.message||res.statusText));
+    }
     const json=await res.json();
     ghSha=json.sha;
-    const b64=json.content.replace(/\n/g,'');
+    // Decode base64 → Uint8Array (handles line-wrapped base64 from GitHub)
+    const b64=json.content.replace(/[\r\n]/g,'');
     const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
-    const wb=XLSX.read(bin,{type:'array'});
-    const ws=wb.Sheets[wb.SheetNames[0]];
-    const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
-    ghHeaders=rows.length?Object.keys(rows[0]):[];
-    ghData=rows;
-    document.getElementById('gh-status').textContent=`Loaded ${rows.length} rows, ${ghHeaders.length} columns from "${wb.SheetNames[0]}"`;
+    const wb=XLSX.read(bin,{type:'array',cellDates:true});
+    const sheetName=wb.SheetNames[0];
+    const ws=wb.Sheets[sheetName];
+    // Get headers from first row even if no data rows
+    const raw2d=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    if(raw2d.length>0&&raw2d[0].some(v=>v!=='')){
+      ghHeaders=raw2d[0].map(String);
+      ghData=XLSX.utils.sheet_to_json(ws,{defval:''});
+    } else {
+      ghHeaders=[];
+      ghData=[];
+    }
+    document.getElementById('gh-status').textContent=
+      `Loaded: "${sheetName}" — ${ghData.length} row${ghData.length!==1?'s':''}, ${ghHeaders.length} column${ghHeaders.length!==1?'s':''}`;
     _renderDataTable();
   }catch(e){
     document.getElementById('gh-status').textContent='Error: '+e.message;
     toast('Load failed: '+e.message);
+  }finally{
+    btn.disabled=false;btn.textContent='Load DATA.xlsx';
   }
 }
 
 function _renderDataTable(){
   const c=document.getElementById('datasync-content');
-  if(!ghData.length){c.innerHTML='<p style="color:var(--mist);font-size:.78rem">Sheet is empty.</p>';return;}
-  const header=ghHeaders.map(h=>`<th>${h}</th>`).join('');
-  const rows=ghData.map((r,i)=>
-    `<tr>${ghHeaders.map(h=>`<td style="font-size:.73rem">${r[h]??''}</td>`).join('')}
+  // No headers yet → show column setup UI
+  if(!ghHeaders.length){
+    c.innerHTML=`<div class="risk-card">
+      <div class="risk-title" style="margin-bottom:8px">Set Up Columns</div>
+      <p style="font-size:.76rem;color:var(--mist);margin-bottom:12px">DATA.xlsx has no column headers. Define them to start adding rows.</p>
+      <label>Column names (comma-separated)</label>
+      <input id="gh-col-setup" placeholder="Project, Status, Owner, Due Date, Notes" style="margin-bottom:12px">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="ghSetupColumns()">Create Columns</button>
+        <button class="btn btn-outline" onclick="ghSaveData()">Save Empty Sheet</button>
+      </div>
+    </div>`;
+    return;
+  }
+  // Escape cell values for safe innerHTML insertion
+  const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const thCells=ghHeaders.map(h=>`<th>${esc(h)}</th>`).join('');
+  const bodyRows=ghData.map((r,i)=>`<tr>
+    ${ghHeaders.map(h=>`<td style="font-size:.73rem">${esc(r[h])}</td>`).join('')}
     <td style="white-space:nowrap">
       <button class="btn btn-outline btn-sm" onclick="openDataRowModal(${i})">Edit</button>
       <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none;margin-left:3px" onclick="deleteDataRow(${i})">Del</button>
     </td></tr>`).join('');
-  c.innerHTML=`<div class="section-header">
-    <span class="section-title">${ghData.length} rows</span>
-    <div style="display:flex;gap:8px">
+  c.innerHTML=`<div class="section-header" style="margin-bottom:12px">
+    <span class="section-title">${ghData.length} row${ghData.length!==1?'s':''} · ${ghHeaders.length} columns</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-outline btn-sm" onclick="openDataRowModal()">+ Add Row</button>
       <button class="btn btn-primary btn-sm" onclick="ghSaveData()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -1720,23 +1755,39 @@ function _renderDataTable(){
       </button>
     </div>
   </div>
-  <div class="table-wrap"><table><thead><tr>${header}<th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  <div class="table-wrap">
+    <table><thead><tr>${thCells}<th style="width:90px"></th></tr></thead>
+    <tbody>${bodyRows||'<tr><td colspan="'+(ghHeaders.length+1)+'" style="text-align:center;color:var(--mist);padding:20px">No rows yet — click + Add Row</td></tr>'}</tbody>
+    </table>
+  </div>`;
+}
+
+function ghSetupColumns(){
+  const raw=document.getElementById('gh-col-setup').value;
+  const cols=raw.split(',').map(s=>s.trim()).filter(Boolean);
+  if(!cols.length){toast('Enter at least one column name');return;}
+  ghHeaders=cols;
+  ghData=[];
+  _renderDataTable();
+  toast('Columns set — add rows then Save to GitHub');
 }
 
 function openDataRowModal(i){
+  if(ghSha===null&&!ghHeaders.length){toast('Load DATA.xlsx first');return;}
   editDataIdx=i===undefined?-1:i;
   const row=i!==undefined?ghData[i]:{};
   document.getElementById('data-modal-h').textContent=i!==undefined?'Edit Row':'Add Row';
+  // Use numeric field IDs to avoid CSS.escape issues with special-char headers
   document.getElementById('data-form-fields').innerHTML=ghHeaders.length
-    ?ghHeaders.map(h=>`<div><label>${h}</label><input id="df-${CSS.escape(h)}" value="${String(row[h]??'').replace(/"/g,'&quot;')}"></div>`).join('')
-    :'<p style="color:var(--mist);font-size:.78rem">Load data first.</p>';
+    ?ghHeaders.map((h,idx)=>`<div><label>${String(h).replace(/</g,'&lt;')}</label><input id="df-${idx}" value="${String(row[h]??'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}"></div>`).join('')
+    :'<p style="color:var(--mist);font-size:.78rem">Set up columns first.</p>';
   document.getElementById('modal-data').classList.add('open');
 }
 
 function saveDataRow(){
-  if(!ghHeaders.length){toast('Load data first');return;}
+  if(!ghHeaders.length){toast('Set up columns first');return;}
   const row={};
-  ghHeaders.forEach(h=>{const el=document.getElementById('df-'+CSS.escape(h));if(el)row[h]=el.value;});
+  ghHeaders.forEach((h,idx)=>{const el=document.getElementById('df-'+idx);if(el)row[h]=el.value;});
   if(editDataIdx>=0) ghData[editDataIdx]=row; else ghData.push(row);
   closeModal('modal-data');
   _renderDataTable();
@@ -1751,30 +1802,36 @@ function deleteDataRow(i){
 }
 
 async function ghSaveData(){
-  const raw=localStorage.getItem('gh-token');
-  if(!raw){toast('No token — connect first');return;}
-  if(!ghSha){toast('Load data first');return;}
-  const token=decodeURIComponent(escape(atob(raw)));
-  document.getElementById('gh-status').textContent='Saving…';
+  const token=_ghToken();
+  if(!token){toast('No token — connect first');return;}
+  if(ghSha===null){toast('Load DATA.xlsx first so we have the file SHA');return;}
+  document.getElementById('gh-status').textContent='Saving to GitHub…';
   try{
-    const ws=XLSX.utils.json_to_sheet(ghData,{header:ghHeaders});
+    // Build worksheet: write headers even if no data rows
+    const ws=ghData.length
+      ?XLSX.utils.json_to_sheet(ghData,{header:ghHeaders})
+      :XLSX.utils.aoa_to_sheet([ghHeaders]);
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,'Data');
-    const binStr=XLSX.write(wb,{type:'binary',bookType:'xlsx'});
-    const bytes=new Uint8Array(binStr.length);
-    for(let i=0;i<binStr.length;i++) bytes[i]=binStr.charCodeAt(i);
-    let b64=''; const chunk=8192;
-    for(let i=0;i<bytes.length;i+=chunk) b64+=String.fromCharCode(...bytes.subarray(i,Math.min(i+chunk,bytes.length)));
-    b64=btoa(b64);
+    // Use SheetJS native base64 output — no manual binary conversion needed
+    const b64=XLSX.write(wb,{type:'base64',bookType:'xlsx'});
     const res=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`,{
       method:'PUT',
       headers:{Authorization:`token ${token}`,'Content-Type':'application/json'},
-      body:JSON.stringify({message:'Update DATA.xlsx via PMO dashboard',content:b64,sha:ghSha})
+      body:JSON.stringify({
+        message:`PMO Data Sync — ${new Date().toISOString().slice(0,10)}: ${ghData.length} row(s)`,
+        content:b64,
+        sha:ghSha
+      })
     });
-    if(!res.ok) throw new Error(res.status+' '+res.statusText);
+    if(!res.ok){
+      const err=await res.json().catch(()=>({message:res.statusText}));
+      throw new Error(res.status+': '+(err.message||res.statusText));
+    }
     const json=await res.json();
     ghSha=json.content.sha;
-    document.getElementById('gh-status').textContent='Saved successfully — '+new Date().toLocaleTimeString();
+    document.getElementById('gh-status').textContent=
+      `Saved — ${ghData.length} rows written at ${new Date().toLocaleTimeString()}`;
     toast('DATA.xlsx saved to GitHub');
   }catch(e){
     document.getElementById('gh-status').textContent='Save error: '+e.message;
