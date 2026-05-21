@@ -324,6 +324,28 @@ textarea{resize:vertical;min-height:72px}
 #theme-toggle{position:fixed;bottom:76px;right:20px;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--mist);cursor:pointer;z-index:9000;display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,.1);transition:box-shadow .2s,transform .15s;padding:0}
 #theme-toggle:hover{box-shadow:0 4px 16px rgba(0,0,0,.18);transform:translateY(-1px)}
 @media(max-width:900px){#theme-toggle{bottom:70px;right:14px}}
+/* ── MONOCHROME ICON SYSTEM ── */
+/* Nav icons — muted when idle, sharp when active/hovered */
+.nav-item svg{stroke:rgba(255,255,255,.45);transition:stroke .15s}
+.nav-item:hover svg{stroke:rgba(255,255,255,.8)}
+.nav-item.active svg{stroke:#fff}
+/* Button icons — inherit text but at reduced opacity */
+.btn svg{opacity:.75;transition:opacity .15s}
+.btn:hover svg,.btn:focus svg{opacity:1}
+.btn-primary svg{opacity:.9}
+/* Topbar hamburger + topbar action icons */
+.menu-toggle svg{stroke:var(--mist)}
+.menu-toggle:hover svg{stroke:var(--ink)}
+/* ── AUTOSAVE UI ── */
+.as-bar{display:flex;align-items:center;gap:8px;padding:8px 0 4px;flex-wrap:wrap}
+#autosave-toggle{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:.68rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--mist);transition:all .2s;white-space:nowrap}
+#autosave-toggle.on{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+[data-theme="dark"] #autosave-toggle.on{background:#14532d;color:#86efac;border-color:#166534}
+.as-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+#autosave-toggle.on .as-dot{animation:asPulse 1.8s ease-in-out infinite}
+@keyframes asPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+#as-next{font-size:.62rem;color:var(--mist);min-width:90px}
+[data-theme="dark"] #autosave-toggle{background:var(--card);border-color:var(--border)}
 </style>
 </head>
 <body>
@@ -557,8 +579,15 @@ textarea{resize:vertical;min-height:72px}
           </div>
           <button class="btn btn-primary" onclick="ghSaveToken()">Connect</button>
           <button class="btn btn-outline" onclick="ghLoadData()" id="gh-load-btn" disabled>Load DATA.xlsx</button>
+          <button class="btn btn-primary" onclick="ghSaveData()" id="gh-save-now-btn" disabled>Save Now</button>
         </div>
-        <div id="gh-status" style="font-size:.72rem;color:var(--mist);margin-top:8px"></div>
+        <div class="as-bar">
+          <button id="autosave-toggle" onclick="toggleAutoSave()">
+            <span class="as-dot"></span>Autosave OFF
+          </button>
+          <span id="as-next"></span>
+        </div>
+        <div id="gh-status" style="font-size:.72rem;color:var(--mist);margin-top:2px"></div>
       </div>
       <div id="datasync-content">
         <p style="color:var(--mist);font-size:.78rem">Connect with a GitHub Personal Access Token (with <code>repo</code> scope) to load and manage DATA.xlsx.</p>
@@ -947,6 +976,11 @@ function saveSettings(){
 // NAV
 // ════════════════════════════════════════════════════════════════════
 function nav(id,el){
+  // Pause countdown display when leaving datasync (timer keeps running in bg)
+  if(currentPanel==='datasync'&&id!=='datasync'){
+    clearInterval(window._asCountdownTimer);
+    const nxt=document.getElementById('as-next');if(nxt)nxt.textContent='';
+  }
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');
@@ -1652,7 +1686,9 @@ function toggleTheme(){
 // DATA SYNC — GitHub DATA.xlsx read / append / delete
 // ════════════════════════════════════════════════════════════════════
 const GH_REPO='kneuralabs/pmo', GH_FILE='DATA.xlsx';
+const AS_INTERVAL_MS=120000; // 2 minutes
 let ghSha=null,ghData=[],ghHeaders=[],editDataIdx=-1;
+let asTimer=null,asNext=0;
 
 function _ghToken(){
   const raw=localStorage.getItem('gh-token');
@@ -1666,6 +1702,8 @@ function renderDataSync(){
     document.getElementById('gh-load-btn').disabled=false;
     document.getElementById('gh-status').textContent='Token loaded. Click Load DATA.xlsx.';
   }
+  _updateSaveNowBtn();
+  _updateAsUI();
   if(ghSha!==null) _renderDataTable();
 }
 
@@ -1711,6 +1749,7 @@ async function ghLoadData(){
     }
     document.getElementById('gh-status').textContent=
       `Loaded: "${sheetName}" — ${ghData.length} row${ghData.length!==1?'s':''}, ${ghHeaders.length} column${ghHeaders.length!==1?'s':''}`;
+    _updateSaveNowBtn();
     _renderDataTable();
   }catch(e){
     document.getElementById('gh-status').textContent='Error: '+e.message;
@@ -1801,27 +1840,27 @@ function deleteDataRow(i){
   toast('Row deleted — save to GitHub to persist');
 }
 
-async function ghSaveData(){
+async function ghSaveData(silent=false){
   const token=_ghToken();
-  if(!token){toast('No token — connect first');return;}
-  if(ghSha===null){toast('Load DATA.xlsx first so we have the file SHA');return;}
-  document.getElementById('gh-status').textContent='Saving to GitHub…';
+  if(!token){if(!silent)toast('No token — connect first');return;}
+  if(ghSha===null){if(!silent)toast('Load DATA.xlsx first so we have the file SHA');return;}
+  const saveBtn=document.getElementById('gh-save-now-btn');
+  if(saveBtn){saveBtn.disabled=true;saveBtn.textContent='Saving…';}
+  const statusEl=document.getElementById('gh-status');
+  if(statusEl) statusEl.textContent='Saving to GitHub…';
   try{
-    // Build worksheet: write headers even if no data rows
     const ws=ghData.length
       ?XLSX.utils.json_to_sheet(ghData,{header:ghHeaders})
       :XLSX.utils.aoa_to_sheet([ghHeaders]);
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,'Data');
-    // Use SheetJS native base64 output — no manual binary conversion needed
     const b64=XLSX.write(wb,{type:'base64',bookType:'xlsx'});
     const res=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`,{
       method:'PUT',
       headers:{Authorization:`token ${token}`,'Content-Type':'application/json'},
       body:JSON.stringify({
         message:`PMO Data Sync — ${new Date().toISOString().slice(0,10)}: ${ghData.length} row(s)`,
-        content:b64,
-        sha:ghSha
+        content:b64,sha:ghSha
       })
     });
     if(!res.ok){
@@ -1830,13 +1869,66 @@ async function ghSaveData(){
     }
     const json=await res.json();
     ghSha=json.content.sha;
-    document.getElementById('gh-status').textContent=
-      `Saved — ${ghData.length} rows written at ${new Date().toLocaleTimeString()}`;
-    toast('DATA.xlsx saved to GitHub');
+    const ts=new Date().toLocaleTimeString();
+    if(statusEl) statusEl.textContent=`Saved — ${ghData.length} rows at ${ts}`;
+    if(!silent) toast('DATA.xlsx saved to GitHub');
+    // Reset autosave countdown
+    if(asTimer) _resetAsCountdown();
   }catch(e){
-    document.getElementById('gh-status').textContent='Save error: '+e.message;
-    toast('Save failed: '+e.message);
+    if(statusEl) statusEl.textContent='Save error: '+e.message;
+    if(!silent) toast('Save failed: '+e.message);
+  }finally{
+    if(saveBtn){saveBtn.disabled=(ghSha===null);saveBtn.textContent='Save Now';}
   }
+}
+
+// ── AUTOSAVE HELPERS ──────────────────────────────────────────────
+function toggleAutoSave(){
+  if(asTimer){
+    clearInterval(asTimer);
+    clearInterval(window._asCountdownTimer);
+    asTimer=null;
+    _updateAsUI();
+    toast('Autosave disabled');
+  }else{
+    ghSaveData(true);  // immediate save when enabling
+    asTimer=setInterval(()=>ghSaveData(true),AS_INTERVAL_MS);
+    _resetAsCountdown();
+    _updateAsUI();
+    toast('Autosave on — saves every 2 minutes');
+  }
+}
+
+function _resetAsCountdown(){
+  clearInterval(window._asCountdownTimer);
+  asNext=Date.now()+AS_INTERVAL_MS;
+  window._asCountdownTimer=setInterval(_tickCountdown,1000);
+}
+
+function _tickCountdown(){
+  if(!asTimer){clearInterval(window._asCountdownTimer);return;}
+  const sec=Math.max(0,Math.round((asNext-Date.now())/1000));
+  const el=document.getElementById('as-next');
+  if(el) el.textContent=`Next save in ${sec}s`;
+}
+
+function _updateAsUI(){
+  const btn=document.getElementById('autosave-toggle');
+  const nxt=document.getElementById('as-next');
+  if(!btn) return;
+  if(asTimer){
+    btn.classList.add('on');
+    btn.innerHTML='<span class="as-dot"></span>Autosave ON';
+  }else{
+    btn.classList.remove('on');
+    btn.innerHTML='<span class="as-dot"></span>Autosave OFF';
+    if(nxt) nxt.textContent='';
+  }
+}
+
+function _updateSaveNowBtn(){
+  const btn=document.getElementById('gh-save-now-btn');
+  if(btn) btn.disabled=(ghSha===null);
 }
 
 // ════════════════════════════════════════════════════════════════════
