@@ -572,25 +572,47 @@ textarea{resize:vertical;min-height:72px}
     <div class="panel" id="panel-datasync">
       <div class="risk-card" style="margin-bottom:16px">
         <div class="risk-title">GitHub Data Connection</div>
-        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:8px">
-          <div style="flex:1;min-width:200px">
-            <label>GitHub Personal Access Token</label>
-            <input type="password" id="gh-token" placeholder="ghp_xxxxxxxx" autocomplete="off">
+
+        <!-- STATE A: not yet verified -->
+        <div id="gh-connect-form" style="margin-top:10px">
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+            <div style="flex:1;min-width:200px">
+              <label>GitHub Personal Access Token</label>
+              <input type="password" id="gh-token" placeholder="ghp_xxxxxxxx" autocomplete="new-password"
+                     onkeydown="if(event.key==='Enter')ghConnect()">
+            </div>
+            <button class="btn btn-primary" onclick="ghConnect()" id="gh-connect-btn">Connect</button>
           </div>
-          <button class="btn btn-primary" onclick="ghSaveToken()">Connect</button>
-          <button class="btn btn-outline" onclick="ghLoadData()" id="gh-load-btn" disabled>Load DATA.xlsx</button>
-          <button class="btn btn-primary" onclick="ghSaveData()" id="gh-save-now-btn" disabled>Save Now</button>
+          <p style="font-size:.68rem;color:var(--mist);margin-top:6px">
+            Token needs <code>repo</code> (or <code>contents:write</code>) scope.
+            It is stored only after a successful connection.
+          </p>
         </div>
-        <div class="as-bar">
-          <button id="autosave-toggle" onclick="toggleAutoSave()">
-            <span class="as-dot"></span>Autosave OFF
-          </button>
-          <span id="as-next"></span>
+
+        <!-- STATE B: verified & locked -->
+        <div id="gh-connected-bar" style="display:none;margin-top:10px;display:none">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span id="gh-connected-label" style="font-size:.76rem;font-weight:600;color:#166534;display:flex;align-items:center;gap:6px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Connected
+            </span>
+            <span id="gh-file-label" style="font-size:.72rem;color:var(--mist)"></span>
+            <button class="btn btn-outline btn-sm" onclick="ghDisconnect()" style="margin-left:auto">Disconnect</button>
+            <button class="btn btn-outline btn-sm" onclick="ghLoadData()">Reload</button>
+            <button class="btn btn-primary btn-sm" onclick="ghSaveData()" id="gh-save-now-btn" disabled>Save Now</button>
+          </div>
+          <div class="as-bar">
+            <button id="autosave-toggle" onclick="toggleAutoSave()">
+              <span class="as-dot"></span>Autosave OFF
+            </button>
+            <span id="as-next"></span>
+          </div>
         </div>
-        <div id="gh-status" style="font-size:.72rem;color:var(--mist);margin-top:2px"></div>
+
+        <div id="gh-status" style="font-size:.72rem;color:var(--mist);margin-top:6px"></div>
       </div>
       <div id="datasync-content">
-        <p style="color:var(--mist);font-size:.78rem">Connect with a GitHub Personal Access Token (with <code>repo</code> scope) to load and manage DATA.xlsx.</p>
+        <p style="color:var(--mist);font-size:.78rem">Connect with a GitHub Personal Access Token to load and manage DATA.xlsx.</p>
       </div>
     </div>
 
@@ -1696,66 +1718,131 @@ function _ghToken(){
 }
 
 function renderDataSync(){
-  const stored=localStorage.getItem('gh-token');
-  if(stored){
-    document.getElementById('gh-token').value='••••••••';
-    document.getElementById('gh-load-btn').disabled=false;
-    document.getElementById('gh-status').textContent='Token loaded. Click Load DATA.xlsx.';
+  const verified=localStorage.getItem('gh-verified')==='1';
+  if(verified){
+    _showConnectedState();
+    if(ghSha===null) ghLoadData(); // auto-load on return if not yet fetched
+    else _renderDataTable();
+  }else{
+    _showConnectForm();
   }
   _updateSaveNowBtn();
   _updateAsUI();
-  if(ghSha!==null) _renderDataTable();
 }
 
-function ghSaveToken(){
-  const v=document.getElementById('gh-token').value.trim();
-  if(!v||v==='••••••••'){toast('Enter a valid GitHub token');return;}
-  localStorage.setItem('gh-token',btoa(v));
-  document.getElementById('gh-load-btn').disabled=false;
-  document.getElementById('gh-status').textContent='Token saved. Click Load DATA.xlsx.';
-  toast('Token saved');
+function _showConnectForm(msg){
+  document.getElementById('gh-connect-form').style.display='';
+  document.getElementById('gh-connected-bar').style.display='none';
+  document.getElementById('gh-token').value='';
+  document.getElementById('gh-token').focus();
+  if(msg) document.getElementById('gh-status').textContent=msg;
 }
 
-async function ghLoadData(){
-  const token=_ghToken();
-  if(!token){toast('Connect first — enter your GitHub token');return;}
-  const btn=document.getElementById('gh-load-btn');
-  btn.disabled=true;btn.textContent='Loading…';
-  document.getElementById('gh-status').textContent='Fetching DATA.xlsx from GitHub…';
+function _showConnectedState(){
+  document.getElementById('gh-connect-form').style.display='none';
+  document.getElementById('gh-connected-bar').style.display='';
+  const fl=document.getElementById('gh-file-label');
+  if(fl) fl.textContent=`${GH_REPO} / ${GH_FILE}`;
+}
+
+// Called by Connect button — validate then load; only persist on success
+async function ghConnect(){
+  const input=document.getElementById('gh-token');
+  const v=input.value.trim();
+  if(!v){toast('Enter your GitHub Personal Access Token');input.focus();return;}
+  const btn=document.getElementById('gh-connect-btn');
+  btn.disabled=true;btn.textContent='Verifying…';
+  document.getElementById('gh-status').textContent='Verifying token and fetching file…';
+  // Store temporarily for _ghToken() to use during load
+  window._ghTokenTemp=v;
+  const ok=await _fetchFile(v);
+  window._ghTokenTemp=null;
+  if(ok){
+    localStorage.setItem('gh-token',btoa(v));
+    localStorage.setItem('gh-verified','1');
+    _showConnectedState();
+    toast('Connected — token saved');
+  }else{
+    // Failed: wipe any stale token
+    localStorage.removeItem('gh-token');
+    localStorage.removeItem('gh-verified');
+    btn.disabled=false;btn.textContent='Connect';
+  }
+}
+
+function ghDisconnect(){
+  localStorage.removeItem('gh-token');
+  localStorage.removeItem('gh-verified');
+  ghSha=null;ghData=[];ghHeaders=[];
+  if(asTimer){clearInterval(asTimer);clearInterval(window._asCountdownTimer);asTimer=null;}
+  _showConnectForm();
+  document.getElementById('datasync-content').innerHTML=
+    '<p style="color:var(--mist);font-size:.78rem">Connect with a GitHub Personal Access Token to load and manage DATA.xlsx.</p>';
+  document.getElementById('gh-status').textContent='';
+  toast('Disconnected');
+}
+
+function _ghToken(){
+  if(window._ghTokenTemp) return window._ghTokenTemp;
+  const raw=localStorage.getItem('gh-token');
+  return raw?atob(raw):null;
+}
+
+// Core file fetch — returns true on success, false on any failure
+async function _fetchFile(token){
   try{
     const res=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`,{
       headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'}
     });
     if(!res.ok){
       const err=await res.json().catch(()=>({message:res.statusText}));
-      throw new Error(res.status+': '+(err.message||res.statusText));
+      const msg=res.status+': '+(err.message||res.statusText);
+      document.getElementById('gh-status').textContent='Connection failed — '+msg;
+      toast('Connection failed: '+msg);
+      return false;
     }
     const json=await res.json();
     ghSha=json.sha;
-    // Decode base64 → Uint8Array (handles line-wrapped base64 from GitHub)
     const b64=json.content.replace(/[\r\n]/g,'');
     const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
     const wb=XLSX.read(bin,{type:'array',cellDates:true});
     const sheetName=wb.SheetNames[0];
     const ws=wb.Sheets[sheetName];
-    // Get headers from first row even if no data rows
     const raw2d=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
     if(raw2d.length>0&&raw2d[0].some(v=>v!=='')){
       ghHeaders=raw2d[0].map(String);
       ghData=XLSX.utils.sheet_to_json(ws,{defval:''});
-    } else {
-      ghHeaders=[];
-      ghData=[];
+    }else{
+      ghHeaders=[];ghData=[];
     }
     document.getElementById('gh-status').textContent=
-      `Loaded: "${sheetName}" — ${ghData.length} row${ghData.length!==1?'s':''}, ${ghHeaders.length} column${ghHeaders.length!==1?'s':''}`;
+      `"${sheetName}" — ${ghData.length} row${ghData.length!==1?'s':''}, ${ghHeaders.length} column${ghHeaders.length!==1?'s':''}`;
     _updateSaveNowBtn();
     _renderDataTable();
+    return true;
   }catch(e){
     document.getElementById('gh-status').textContent='Error: '+e.message;
-    toast('Load failed: '+e.message);
-  }finally{
-    btn.disabled=false;btn.textContent='Load DATA.xlsx';
+    toast('Error: '+e.message);
+    return false;
+  }
+}
+
+// Reload (called from Reload button or auto-load on return)
+async function ghLoadData(){
+  const token=_ghToken();
+  if(!token){
+    // Verified flag set but token gone — force re-connect
+    localStorage.removeItem('gh-verified');
+    _showConnectForm('Session expired — please reconnect.');
+    return;
+  }
+  document.getElementById('gh-status').textContent='Reloading…';
+  const ok=await _fetchFile(token);
+  if(!ok){
+    // Token no longer works → clear and force re-entry
+    localStorage.removeItem('gh-token');
+    localStorage.removeItem('gh-verified');
+    _showConnectForm('Token is no longer valid — please reconnect.');
   }
 }
 
