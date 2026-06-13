@@ -6,9 +6,9 @@
 (function(){var K="kn-auth-session",S="https://sso.kneuralabs.com/";var p=new URLSearchParams(location.search),t=p.get("kn-auth");if(t){try{sessionStorage.setItem(K,t);}catch(e){}p.delete("kn-auth");history.replaceState(null,"",location.pathname+(p.toString()?"?"+p:"")+location.hash);}if(!sessionStorage.getItem(K)){location.replace(S+"?redirect="+encodeURIComponent(location.href));}})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title id="doc-title">KNEURALABS — AI Governance Platform</title>
+<title id="doc-title">Kneuralabs — AI Governance Platform</title>
 <meta name="description" content="AI Governance Platform · NIST AI Risk Management Framework · ISO/IEC 42001:2023 · EU AI Act">
-<meta property="og:title" content="KNEURALABS — AI Governance Platform">
+<meta property="og:title" content="Kneuralabs — AI Governance Platform">
 <meta property="og:description" content="Governance built to run. AI risk management for U.S. mid-market companies.">
 <meta property="og:image" content="og.png">
 <meta property="og:url" content="https://pmo.kneuralabs.com/">
@@ -18,12 +18,12 @@
 <link rel="apple-touch-icon" href="LOGO.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" media="print" onload="this.media='all'" />
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" /></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" /></noscript>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
-/* ── KNEURALABS BRAND TOKENS ── */
+/* ── Kneuralabs brand tokens ── */
 :root{
   --ink:#1A1D23;--paper:#F7F8FA;--steel:#0D2E5A;
   --accent:#1C5CAA;--accent-h:#0D2E5A;
@@ -32,6 +32,7 @@
   --green:#2d9e5a;--blue:#1C5CAA;--purple:#7c3aed;
   --r:6px;--shadow:0 2px 20px rgba(0,0,0,.06);--shadow-lg:0 8px 40px rgba(0,0,0,.12);
   --ease:cubic-bezier(.16,1,.3,1);
+  --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bot:env(safe-area-inset-bottom,0px);
 }
@@ -40,7 +41,11 @@
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;overflow-x:hidden}
+body{font-family:'Inter',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;overflow-x:hidden;font-feature-settings:'tnum','cv11'}
+/* MONO NUMERALS — financials, metrics, dates, codes */
+.stat-val,.cal-day,.gantt-month,.gantt-bar-label,.cr-id,.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.util-label,.prog-wrap+small,.dec-meta,.cal-sub{font-variant-numeric:tabular-nums}
+td{font-variant-numeric:tabular-nums}
 
 /* LOADER */
 #loader{position:fixed;inset:0;background:var(--steel);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s var(--ease)}
@@ -111,7 +116,7 @@ main{display:flex;flex-direction:column;min-height:100vh;background:var(--paper)
 .stat-card.blue::before{background:var(--blue)}
 .stat-card.purple::before{background:var(--purple)}
 .stat-label{font-size:.62rem;color:var(--mist);text-transform:uppercase;letter-spacing:.1em}
-.stat-val{font-family:'Inter',sans-serif;font-weight:800;font-size:2rem;margin:6px 0 2px;line-height:1;counter-reset:none}
+.stat-val{font-family:var(--mono);font-weight:700;font-size:2rem;margin:6px 0 2px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
 .stat-sub{font-size:.65rem;color:var(--mist)}
 .stat-icon{position:absolute;right:16px;top:16px;opacity:.08;width:40px;height:40px}
 
@@ -253,7 +258,7 @@ textarea{resize:vertical;min-height:72px}
 .gov-cal-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
 .gov-cal-item:last-child{border-bottom:none}
 .cal-date-box{background:var(--paper);border:1px solid var(--border);border-radius:6px;width:44px;text-align:center;padding:6px 4px;flex-shrink:0}
-.cal-day{font-family:'Inter',sans-serif;font-weight:800;font-size:1.1rem;line-height:1}
+.cal-day{font-family:var(--mono);font-weight:700;font-size:1.1rem;line-height:1;font-variant-numeric:tabular-nums}
 .cal-mon{font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mist)}
 .cal-body{flex:1;min-width:0}
 .cal-title{font-size:.76rem;font-weight:500}
@@ -353,12 +358,84 @@ textarea{resize:vertical;min-height:72px}
 @keyframes asPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
 #as-next{font-size:.62rem;color:var(--mist);min-width:90px}
 [data-theme="dark"] #autosave-toggle{background:var(--card);border-color:var(--border)}
+
+/* ══ WORLD-CLASS ANIMATION LAYER ══ */
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes floatGlow{0%,100%{box-shadow:0 2px 20px rgba(0,0,0,.06)}50%{box-shadow:0 6px 28px rgba(28,92,170,.12)}}
+@keyframes popIn{0%{opacity:0;transform:scale(.92) translateY(8px)}60%{opacity:1;transform:scale(1.01)}100%{transform:scale(1) translateY(0)}}
+@keyframes slideBar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes ringGlow{0%,100%{filter:none}50%{filter:drop-shadow(0 0 6px var(--accent))}}
+/* progress bars sweep + subtle live shimmer */
+.prog-fill,.util-fill{position:relative;background-image:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);background-size:200% 100%;background-repeat:no-repeat;animation:shimmer 2.6s var(--ease) infinite}
+/* nav micro-interaction */
+.nav-item{position:relative}
+.nav-item::after{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%) scaleY(0);width:3px;height:60%;background:#fff;border-radius:2px;transition:transform .25s var(--ease)}
+.nav-item.active::after{transform:translateY(-50%) scaleY(1)}
+.nav-item:hover{transform:translateX(3px)}
+/* buttons: lift + sheen */
+.btn{position:relative;overflow:hidden}
+.btn::before{content:'';position:absolute;top:0;left:-120%;width:60%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.35),transparent);transition:left .55s var(--ease)}
+.btn:hover::before{left:140%}
+.btn:active{transform:scale(.96)}
+/* stat cards: staggered pop + hover float */
+.stat-card{animation:popIn .5s var(--ease) both}
+.stat-card:hover{animation:floatGlow 2.4s ease-in-out infinite}
+.stat-val.counting{color:var(--accent)}
+/* table rows reveal */
+tbody tr{animation:fadeUp .45s var(--ease) both}
+tbody tr:nth-child(1){animation-delay:.02s}tbody tr:nth-child(2){animation-delay:.06s}tbody tr:nth-child(3){animation-delay:.1s}tbody tr:nth-child(4){animation-delay:.14s}tbody tr:nth-child(5){animation-delay:.18s}tbody tr:nth-child(n+6){animation-delay:.22s}
+/* gantt bars grow from left */
+.gantt-bar{transform-origin:left center}
+.gantt-bar:hover{transform:translateY(-50%) scale(1.015)}
+.health-ring svg:hover{animation:ringGlow 2s ease-in-out infinite}
+/* clickable project rows */
+tr.proj-row{cursor:pointer}
+tr.proj-row:hover td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+/* ══ PROJECT DETAIL ══ */
+.modal.wide{width:min(960px,100%)}
+.pd-head{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.pd-meta{display:flex;gap:18px;flex-wrap:wrap;font-size:.68rem;color:var(--mist);margin:8px 0 16px}
+.pd-meta b{color:var(--ink);font-family:var(--mono)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:18px;flex-wrap:wrap}
+.tab{padding:9px 14px;font-size:.72rem;font-weight:600;color:var(--mist);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .2s}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-pane{display:none;animation:fadeUp .3s var(--ease)}
+.tab-pane.active{display:block}
+.st-row{display:grid;grid-template-columns:160px 1fr auto;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.st-name{font-size:.74rem;font-weight:500}
+.st-name small{display:block;color:var(--mist);font-size:.6rem}
+.st-track{position:relative;height:20px;background:var(--paper);border-radius:5px;overflow:hidden}
+.st-bar{position:absolute;height:100%;border-radius:5px;background:var(--accent);opacity:.9;display:flex;align-items:center;padding:0 7px;font-size:.55rem;color:#fff;white-space:nowrap;transform-origin:left;animation:slideBar .6s var(--ease) both}
+.mini-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;align-items:end;background:var(--paper);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:14px}
+.mini-form .btn{height:38px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--paper);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.kpi .l{font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mist)}
+.kpi .v{font-family:var(--mono);font-weight:700;font-size:1.25rem;margin-top:4px}
+/* ══ CONTINUOUS IMPROVEMENT (CIP) ══ */
+.cip-board{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.cip-col{background:var(--paper);border:1px solid var(--border);border-radius:8px;padding:10px;min-height:120px}
+.cip-col h4{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mist);margin-bottom:10px;display:flex;justify-content:space-between}
+.cip-col h4 span{font-family:var(--mono)}
+.cip-card{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;padding:10px;margin-bottom:8px;cursor:grab;transition:transform .15s,box-shadow .15s;animation:popIn .4s var(--ease) both}
+.cip-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.cip-card.dragging{opacity:.5}
+.cip-col.drop{outline:2px dashed var(--accent);outline-offset:-4px}
+.cip-t{font-size:.72rem;font-weight:600;line-height:1.3}
+.cip-m{font-size:.58rem;color:var(--mist);margin-top:5px;display:flex;gap:6px;flex-wrap:wrap}
+.pill{font-size:.55rem;font-weight:700;padding:1px 6px;border-radius:10px}
+.pill-hi{background:#fee2e2;color:#991b1b}.pill-md{background:#fef9c3;color:#854d0e}.pill-lo{background:#dcfce7;color:#166534}
+@media(max-width:900px){.cip-board{grid-template-columns:1fr 1fr;}.st-row{grid-template-columns:1fr;gap:6px}}
+@media(max-width:500px){.cip-board{grid-template-columns:1fr}}
+/* Respect reduced motion */
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
 </style>
 </head>
 <body>
 
 <div id="loader">
-  <div class="ld-logo" id="ld-logo-text">KNEURA<span>LABS</span></div>
+  <div class="ld-logo" id="ld-logo-text">Kneura<span>labs</span></div>
   <div class="ld-bar"><div class="ld-fill"></div></div>
   <div class="ld-sub" id="ld-sub-text">AI Governance Platform</div>
 </div>
@@ -372,7 +449,7 @@ textarea{resize:vertical;min-height:72px}
 <div id="app">
 <aside id="sidebar">
   <div class="logo">
-    <h1 id="logo-h1">KNEURA<span>LABS</span></h1>
+    <h1 id="logo-h1">Kneura<span>labs</span></h1>
     <p id="logo-sub">AI Governance Platform</p>
   </div>
   <nav>
@@ -412,6 +489,11 @@ textarea{resize:vertical;min-height:72px}
     <button class="nav-item" onclick="nav('resources',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       Resources
+    </button>
+    <button class="nav-item" onclick="nav('improvement',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      Continuous Improvement
+      <span class="nav-badge" id="cip-count"></span>
     </button>
     <div class="nav-section">Data</div>
     <button class="nav-item" onclick="nav('datasync',this)">
@@ -573,6 +655,16 @@ textarea{resize:vertical;min-height:72px}
     <!-- RESOURCES -->
     <div class="panel" id="panel-resources">
       <div class="resource-grid" id="resource-grid"></div>
+    </div>
+
+    <!-- CONTINUOUS IMPROVEMENT -->
+    <div class="panel" id="panel-improvement">
+      <div class="stats-grid stagger" id="cip-stats"></div>
+      <div class="section-header">
+        <span class="section-title">Improvement Pipeline — PDCA / Kaizen</span>
+        <span class="section-sub">Drag cards across stages to advance · Plan → Do → Check → Act</span>
+      </div>
+      <div class="cip-board" id="cip-board"></div>
     </div>
 
     <!-- DATA SYNC -->
@@ -839,12 +931,80 @@ textarea{resize:vertical;min-height:72px}
   </div>
 </div>
 
+<!-- PROJECT DETAIL MODAL -->
+<div class="modal-bg" id="modal-pd">
+  <div class="modal wide">
+    <div class="pd-head">
+      <div style="flex:1;min-width:0">
+        <h2 id="pd-title" style="margin-bottom:4px">Project</h2>
+        <div id="pd-badges"></div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-pd')">Close</button>
+    </div>
+    <div class="pd-meta" id="pd-meta"></div>
+    <div class="tabs">
+      <button class="tab active" onclick="pdTab('timeline',this)">Timeline & Sub-tasks</button>
+      <button class="tab" onclick="pdTab('risks',this)">Risk Register</button>
+      <button class="tab" onclick="pdTab('budget',this)">Budget Tracker</button>
+      <button class="tab" onclick="pdTab('resources',this)">Resources</button>
+    </div>
+    <div class="tab-pane active" id="pd-timeline"></div>
+    <div class="tab-pane" id="pd-risks"></div>
+    <div class="tab-pane" id="pd-budget"></div>
+    <div class="tab-pane" id="pd-resources"></div>
+  </div>
+</div>
+
+<!-- SUBTASK MODAL -->
+<div class="modal-bg" id="modal-subtask">
+  <div class="modal">
+    <h2 id="sub-h">Add Sub-task</h2>
+    <div class="form-grid">
+      <div style="grid-column:1/-1"><label>Sub-task Name</label><input id="sub-name" placeholder="e.g. Requirements workshop"></div>
+      <div><label>Owner</label><input id="sub-owner" placeholder="Assignee"></div>
+      <div><label>Status</label><select id="sub-status"><option>Not Started</option><option>In Progress</option><option>Blocked</option><option>Done</option></select></div>
+      <div><label>Start Date</label><input type="date" id="sub-start"></div>
+      <div><label>End Date</label><input type="date" id="sub-end"></div>
+      <div><label>Progress (%)</label><input type="number" id="sub-prog" min="0" max="100" placeholder="0"></div>
+      <div><label>Cost (<span class="cur-sym">$</span>)</label><input type="number" id="sub-cost" placeholder="0"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-subtask')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSubtask()">Save Sub-task</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPROVEMENT MODAL -->
+<div class="modal-bg" id="modal-cip">
+  <div class="modal">
+    <h2 id="cip-h">New Improvement Initiative</h2>
+    <div class="form-grid">
+      <div style="grid-column:1/-1"><label>Title</label><input id="cip-title" placeholder="e.g. Automate weekly status reporting"></div>
+      <div><label>Project / Area</label><select id="cip-project"></select></div>
+      <div><label>Category</label><select id="cip-cat"><option>Process</option><option>Quality</option><option>Cost</option><option>Risk</option><option>Compliance</option><option>Automation</option><option>People</option></select></div>
+      <div><label>Stage</label><select id="cip-stage"><option>Identify</option><option>Plan</option><option>Do</option><option>Check</option><option>Act</option></select></div>
+      <div><label>Owner</label><input id="cip-owner" placeholder="Owner"></div>
+      <div><label>Impact</label><select id="cip-impact"><option>High</option><option>Medium</option><option>Low</option></select></div>
+      <div><label>Effort</label><select id="cip-effort"><option>High</option><option>Medium</option><option>Low</option></select></div>
+    </div>
+    <div class="form-grid full" style="margin-top:14px">
+      <div><label>Expected Outcome</label><textarea id="cip-desc" placeholder="What measurable improvement do we expect?"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none;margin-right:auto" onclick="deleteCip()">Delete</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-cip')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCip()">Save Initiative</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ════════════════════════════════════════════════════════════════════
 // COMPANY CONFIG — change this object to rebrand for any organisation
 // ════════════════════════════════════════════════════════════════════
 const DEFAULT_CONFIG = {
-  company:'KNEURALABS', tagline:'AI Governance Platform',
+  company:'Kneuralabs', tagline:'AI Governance Platform',
   footer:'v3.0 · AI Governance Platform\n© 2025 Kneuralabs LLC',
   accent:'#1C5CAA', steel:'#0D2E5A',
   currency:'$', dateFmt:'en-US',
@@ -852,6 +1012,8 @@ const DEFAULT_CONFIG = {
 };
 
 let CFG = JSON.parse(localStorage.getItem('nx-config')||'null') || {...DEFAULT_CONFIG};
+// Migrate legacy all-caps brand → sentence case
+if(CFG.company==='KNEURALABS'){CFG.company='Kneuralabs';localStorage.setItem('nx-config',JSON.stringify(CFG));}
 
 // ════════════════════════════════════════════════════════════════════
 // DATA STORES
@@ -860,13 +1022,17 @@ let projects    = JSON.parse(localStorage.getItem('nx-projects')||'[]');
 let risks       = JSON.parse(localStorage.getItem('nx-risks')||'[]');
 let decisions   = JSON.parse(localStorage.getItem('nx-decisions')||'[]');
 let changeReqs  = JSON.parse(localStorage.getItem('nx-crs')||'[]');
+let subtasks    = JSON.parse(localStorage.getItem('nx-subtasks')||'[]');
+let improvements= JSON.parse(localStorage.getItem('nx-cip')||'[]');
 let editIdx=-1, currentPanel='dashboard';
+let pdProject=null, editSubIdx=-1, editCipIdx=-1;
+const CIP_STAGES=['Identify','Plan','Do','Check','Act'];
 
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const COLORS=['#e8440a','#c9a84c','#2d9e5a','#3b6ef5','#7c3aed','#0891b2','#db2777'];
 const AVT_COLORS=['#e8440a','#3b6ef5','#2d9e5a','#7c3aed','#c9a84c'];
-const TITLES={dashboard:'Dashboard',governance:'Governance Board',projects:'Projects',gantt:'Gantt / Timeline',milestones:'Milestones',risks:'Risk Register',budget:'Budget Tracker',resources:'Resources',datasync:'Data Sync — DATA.xlsx'};
-const ADD_LABELS={dashboard:'Add Project',governance:'Log Decision',projects:'Add Project',gantt:'Add Project',milestones:'Add Milestone',risks:'Add Risk',budget:'Update Budget',resources:'Add Resource',datasync:'Add Row'};
+const TITLES={dashboard:'Dashboard',governance:'Governance Board',projects:'Projects',gantt:'Gantt / Timeline',milestones:'Milestones',risks:'Risk Register',budget:'Budget Tracker',resources:'Resources',improvement:'Continuous Improvement',datasync:'Data Sync — DATA.xlsx'};
+const ADD_LABELS={dashboard:'Add Project',governance:'Log Decision',projects:'Add Project',gantt:'Add Project',milestones:'Add Milestone',risks:'Add Risk',budget:'Update Budget',resources:'Add Resource',improvement:'New Initiative',datasync:'Add Row'};
 let editRiskIdx=-1, editDecIdx=-1, editCRIdx=-1, editResIdx=-1;
 let customMilestones=JSON.parse(localStorage.getItem('nx-milestones')||'[]');
 let resources=JSON.parse(localStorage.getItem('nx-resources')||'[]');
@@ -911,6 +1077,20 @@ function seedData(){
     {id:2,title:'Extend ERP go-live by 6 weeks',project:'Legacy ERP Migration',type:'Schedule',impact:'High',by:'James Okafor',date:`${y2}-04-28`,desc:'UAT defect backlog too large for current timeline',status:'Approved'},
     {id:3,title:'Additional security architect resource',project:'Zero Trust Security',type:'Resource',impact:'Medium',by:'Marcus Velez',date:`${y2}-05-10`,desc:'Require senior security architect for network segmentation design',status:'Pending'},
   ];
+  subtasks=[
+    {id:1,pid:1,name:'Stakeholder discovery',owner:'Sarah Chen',start:`${y}-01-15`,end:`${y}-02-28`,prog:100,cost:35000,status:'Done'},
+    {id:2,pid:1,name:'Policy drafting',owner:'Sarah Chen',start:`${y}-03-01`,end:`${y}-06-30`,prog:60,cost:90000,status:'In Progress'},
+    {id:3,pid:1,name:'Model risk controls rollout',owner:'A. Banks',start:`${y}-07-01`,end:`${y}-09-30`,prog:0,cost:85000,status:'Not Started'},
+    {id:4,pid:2,name:'Data migration & ETL',owner:'James Okafor',start:`${y}-03-01`,end:`${y}-07-31`,prog:55,cost:320000,status:'In Progress'},
+    {id:5,pid:2,name:'UAT & cutover',owner:'QA Team',start:`${y}-08-01`,end:`${y}-12-15`,prog:10,cost:180000,status:'Blocked'},
+  ];
+  improvements=[
+    {id:1,title:'Automate weekly status reporting',project:'Portfolio-wide',cat:'Automation',stage:'Do',owner:'PMO',impact:'High',effort:'Medium',status:'Active',desc:'Auto-generate exec status from project data, cut 4 hrs/wk'},
+    {id:2,title:'Standardize risk scoring rubric',project:'Portfolio-wide',cat:'Risk',stage:'Plan',owner:'Sarah Chen',impact:'High',effort:'Low',status:'Active',desc:'Consistent 5x5 severity/probability scoring across all projects'},
+    {id:3,title:'Reduce ERP UAT defect leakage',project:'Legacy ERP Migration',cat:'Quality',stage:'Check',owner:'QA Team',impact:'High',effort:'High',status:'Active',desc:'Shift-left testing to cut defects found in UAT by 40%'},
+    {id:4,title:'Vendor onboarding checklist',project:'Data Lake Modernization',cat:'Process',stage:'Act',owner:'Priya Nair',impact:'Medium',effort:'Low',status:'Done',desc:'Reusable checklist reduces vendor setup from 3 wks to 1'},
+    {id:5,title:'Cloud cost guardrails',project:'Legacy ERP Migration',cat:'Cost',stage:'Identify',owner:'James Okafor',impact:'High',effort:'Medium',status:'Active',desc:'Budget alerts + tagging policy to prevent overruns'},
+  ];
   save();
 }
 
@@ -922,6 +1102,10 @@ function save(){
   localStorage.setItem('nx-milestones',JSON.stringify(customMilestones));
   localStorage.setItem('nx-resources',JSON.stringify(resources));
   localStorage.setItem('nx-calevents',JSON.stringify(calEvents));
+  localStorage.setItem('nx-subtasks',JSON.stringify(subtasks));
+  localStorage.setItem('nx-cip',JSON.stringify(improvements));
+  const cipBadge=document.getElementById('cip-count');
+  if(cipBadge){const openCip=improvements.filter(i=>i.stage!=='Act'||i.status!=='Done').length;cipBadge.textContent=openCip||'';}
   document.getElementById('proj-count').textContent=projects.length;
   const openRisks=risks.filter(r=>r.status==='Open').length;
   document.getElementById('risk-count').textContent=openRisks;
@@ -1022,8 +1206,9 @@ function nav(id,el){
 }
 
 function renderPanel(id){
-  const fn={dashboard:renderDashboard,governance:renderGovernance,projects:renderProjects,gantt:renderGantt,milestones:renderMilestones,risks:renderRisks,budget:renderBudget,resources:renderResources,datasync:renderDataSync};
+  const fn={dashboard:renderDashboard,governance:renderGovernance,projects:renderProjects,gantt:renderGantt,milestones:renderMilestones,risks:renderRisks,budget:renderBudget,resources:renderResources,improvement:renderImprovement,datasync:renderDataSync};
   if(fn[id]) fn[id]();
+  if(!window.matchMedia('(prefers-reduced-motion:reduce)').matches) requestAnimationFrame(countUp);
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -1204,21 +1389,22 @@ function renderProjects(){
     if(search&&!p.name.toLowerCase().includes(search)&&!p.pm.toLowerCase().includes(search)) return false;
     return true;
   });
-  document.getElementById('projects-tbody').innerHTML=list.map(p=>`
-    <tr>
+  document.getElementById('projects-tbody').innerHTML=list.map(p=>{const gi=projects.indexOf(p);return `
+    <tr class="proj-row" onclick="openProjectDetail(${gi})" title="Open project workspace">
       <td><strong>${p.name}</strong><br><small style="color:var(--mist);font-size:.63rem">${p.desc||''}</small></td>
       <td style="font-size:.7rem">${p.type}</td>
       <td>${badgeHTML(p.status)}</td>
-      <td><div class="prog-wrap" style="width:70px"><div class="prog-fill" style="width:${p.progress}%"></div></div> <small style="font-size:.6rem;color:var(--mist)">${p.progress}%</small></td>
-      <td style="font-size:.73rem;white-space:nowrap">${CFG.currency}${(p.budget/1000).toFixed(0)}k</td>
+      <td><div class="prog-wrap" style="width:70px"><div class="prog-fill" style="width:${p.progress}%"></div></div> <small class="num" style="font-size:.6rem;color:var(--mist)">${p.progress}%</small></td>
+      <td class="num" style="font-size:.73rem;white-space:nowrap">${CFG.currency}${(p.budget/1000).toFixed(0)}k</td>
       <td style="white-space:nowrap;font-size:.7rem">${fmt(p.start)}</td>
       <td style="white-space:nowrap;font-size:.7rem">${fmt(p.end)}</td>
       <td style="font-size:.7rem">${p.pm}</td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-outline btn-sm" onclick="editProject(${projects.indexOf(p)})">Edit</button>
-        <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none;margin-left:4px" onclick="deleteProject(${projects.indexOf(p)})">Del</button>
+      <td style="white-space:nowrap" onclick="event.stopPropagation()">
+        <button class="btn btn-primary btn-sm" onclick="openProjectDetail(${gi})">Open</button>
+        <button class="btn btn-outline btn-sm" style="margin-left:4px" onclick="editProject(${gi})">Edit</button>
+        <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none;margin-left:4px" onclick="deleteProject(${gi})">Del</button>
       </td>
-    </tr>`).join('')||noData(9);
+    </tr>`;}).join('')||noData(9);
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -1338,7 +1524,7 @@ function renderBudget(){
         stroke-dasharray="${circ*spentPct} ${circ*(1-spentPct)}" stroke-linecap="round"/>
     </svg>
     <div>
-      <div style="font-family:'Inter',sans-serif;font-weight:800;font-size:1.6rem">${cur}${(total/1e6).toFixed(2)}M</div>
+      <div class="num" style="font-weight:700;font-size:1.6rem">${cur}${(total/1e6).toFixed(2)}M</div>
       <div style="font-size:.63rem;color:var(--mist);margin-bottom:12px">Total Portfolio</div>
       <div class="donut-legend">
         <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Spent: ${cur}${(spent/1000).toFixed(0)}k (${Math.round(spentPct*100)}%)</div>
@@ -1421,6 +1607,205 @@ function renderResources(){
 }
 
 // ════════════════════════════════════════════════════════════════════
+// PROJECT DETAIL WORKSPACE — own timeline, risks, budget, resources
+// ════════════════════════════════════════════════════════════════════
+function openProjectDetail(i){
+  pdProject=projects[i];if(!pdProject)return;
+  document.getElementById('pd-title').textContent=pdProject.name;
+  document.getElementById('pd-badges').innerHTML=badgeHTML(pdProject.status)+` <span class="badge badge-info">${pdProject.type}</span>`;
+  document.getElementById('pd-meta').innerHTML=`<span>PM <b>${pdProject.pm}</b></span><span>Start <b>${fmt(pdProject.start)}</b></span><span>End <b>${fmt(pdProject.end)}</b></span><span>Progress <b>${pdProject.progress}%</b></span><span>Budget <b>${CFG.currency}${(pdProject.budget/1000).toFixed(0)}k</b></span>`;
+  // reset to first tab
+  document.querySelectorAll('#modal-pd .tab').forEach((t,ti)=>t.classList.toggle('active',ti===0));
+  document.querySelectorAll('#modal-pd .tab-pane').forEach((p,pi)=>p.classList.toggle('active',pi===0));
+  renderPdTimeline();renderPdRisks();renderPdBudget();renderPdResources();
+  document.getElementById('modal-pd').classList.add('open');
+}
+function pdTab(name,el){
+  document.querySelectorAll('#modal-pd .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#modal-pd .tab-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pd-'+name).classList.add('active');
+}
+function pdSubs(){return subtasks.filter(s=>s.pid===pdProject.id);}
+function renderPdTimeline(){
+  const ps=new Date(pdProject.start),pe=new Date(pdProject.end),span=Math.max(1,(pe-ps)/86400000);
+  const subs=pdSubs();
+  const rows=subs.map(s=>{
+    const ss=new Date(s.start),se=new Date(s.end);
+    const left=Math.max(0,Math.min(100,((ss-ps)/86400000/span)*100));
+    const w=Math.max(3,Math.min(100-left,((se-ss)/86400000/span)*100));
+    const col=s.status==='Done'?'var(--green)':s.status==='Blocked'?'var(--red)':s.status==='In Progress'?'var(--accent)':'var(--silver)';
+    const si=subtasks.indexOf(s);
+    return `<div class="st-row">
+      <div class="st-name">${s.name}<small>${s.owner||'—'} · ${s.status}</small></div>
+      <div class="st-track"><div class="st-bar" style="left:${left}%;width:${w}%;background:${col}">${s.prog}%</div></div>
+      <div style="display:flex;gap:4px;white-space:nowrap"><span class="num" style="font-size:.62rem;color:var(--mist);align-self:center">${CFG.currency}${((s.cost||0)/1000).toFixed(0)}k</span>
+        <button class="btn btn-outline btn-sm" onclick="openSubtask(${si})">Edit</button>
+        <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="deleteSubtask(${si})">×</button></div>
+    </div>`;
+  }).join('')||'<p style="color:var(--mist);font-size:.74rem;padding:8px 0">No sub-tasks yet. Add the first one below.</p>';
+  const done=subs.filter(s=>s.status==='Done').length;
+  document.getElementById('pd-timeline').innerHTML=`
+    <div class="kpi-row">
+      <div class="kpi"><div class="l">Sub-tasks</div><div class="v">${subs.length}</div></div>
+      <div class="kpi"><div class="l">Completed</div><div class="v">${done}</div></div>
+      <div class="kpi"><div class="l">Avg Progress</div><div class="v">${subs.length?Math.round(subs.reduce((a,s)=>a+(+s.prog||0),0)/subs.length):0}%</div></div>
+    </div>
+    ${rows}
+    <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="openSubtask()">+ Add Sub-task</button>`;
+}
+function renderPdRisks(){
+  const rs=risks.map((r,i)=>({r,i})).filter(o=>o.r.project===pdProject.name);
+  document.getElementById('pd-risks').innerHTML=`
+    <div class="table-wrap" style="box-shadow:none"><table style="min-width:0"><thead><tr><th>Risk</th><th>Category</th><th>Severity</th><th>Probability</th><th>Owner</th><th>Status</th><th></th></tr></thead><tbody>
+    ${rs.map(({r,i})=>`<tr><td><strong>${r.title}</strong><br><small style="color:var(--mist);font-size:.6rem">${r.mit||''}</small></td><td style="font-size:.7rem">${r.cat}</td><td>${sevBadge(r.sev)}</td><td>${probBadge(r.prob)}</td><td style="font-size:.7rem">${r.owner}</td><td><span class="badge ${r.status==='Open'?'badge-risk':'badge-done'}">${r.status}</span></td>
+      <td style="white-space:nowrap"><button class="btn btn-sm" style="background:${r.status==='Open'?'#dcfce7':'#fee2e2'};color:${r.status==='Open'?'#166534':'#991b1b'};border:none" onclick="toggleRisk(${i});renderPdRisks()">${r.status==='Open'?'Mitigate':'Reopen'}</button>
+      <button class="btn btn-outline btn-sm" style="margin-left:3px" onclick="closeModal('modal-pd');editRisk(${i})">Edit</button></td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--mist);padding:18px">No risks logged for this project</td></tr>'}
+    </tbody></table></div>
+    <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="pdAddRisk()">+ Add Risk to this Project</button>`;
+}
+function pdAddRisk(){
+  const name=pdProject.name;closeModal('modal-pd');
+  editRiskIdx=-1;
+  document.getElementById('r-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('');
+  ['r-title','r-owner','r-mit'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('r-sev').value='Medium';document.getElementById('r-prob').value='Medium';document.getElementById('r-cat').value='Technical';
+  document.querySelector('#modal-risk h2').textContent='Add Risk';
+  document.getElementById('r-project').value=name;
+  document.getElementById('modal-risk').classList.add('open');
+}
+function renderPdBudget(){
+  const planned=pdSubs().reduce((a,s)=>a+(+s.cost||0),0);
+  const spent=pdProject.spent||0,total=pdProject.budget||0,rem=total-spent;
+  const pct=total>0?Math.min(100,Math.round(spent/total*100)):0;
+  const over=spent>total;
+  document.getElementById('pd-budget').innerHTML=`
+    <div class="kpi-row">
+      <div class="kpi"><div class="l">Total Budget</div><div class="v">${CFG.currency}${(total/1000).toFixed(0)}k</div></div>
+      <div class="kpi"><div class="l">Spent</div><div class="v" style="color:${over?'var(--red)':'inherit'}">${CFG.currency}${(spent/1000).toFixed(0)}k</div></div>
+      <div class="kpi"><div class="l">Remaining</div><div class="v" style="color:${rem<0?'var(--red)':'var(--green)'}">${CFG.currency}${(rem/1000).toFixed(0)}k</div></div>
+      <div class="kpi"><div class="l">Planned (sub-tasks)</div><div class="v">${CFG.currency}${(planned/1000).toFixed(0)}k</div></div>
+    </div>
+    <div class="util-label"><span>Budget consumed</span><span class="num" style="color:${over?'var(--red)':'var(--mist)'}">${pct}%</span></div>
+    <div class="util-bar" style="height:10px"><div class="util-fill" style="width:${pct}%;background:${over?'var(--red)':pct>80?'#f59e0b':'var(--green)'}"></div></div>
+    <p style="font-size:.66rem;color:var(--mist);margin-top:10px">Planned cost is the sum of this project's sub-task budgets. ${planned>total?'<b style="color:var(--red)">Planned exceeds approved budget.</b>':''}</p>
+    <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="closeModal('modal-pd');openBudgetModal(${projects.indexOf(pdProject)})">Update Budget</button>`;
+}
+function renderPdResources(){
+  const team=resources.filter(r=>r.project===pdProject.name||r.name===pdProject.pm);
+  const names=new Set(team.map(t=>t.name));
+  if(!names.has(pdProject.pm)) team.unshift({name:pdProject.pm,role:'Project Manager',util:null,derived:true});
+  document.getElementById('pd-resources').innerHTML=`
+    <div class="resource-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+    ${team.map((r,ci)=>{const init=r.name.split(' ').map(n=>n[0]).join('');const util=r.util==null?Math.min(100,(pdProject.progress||0)):r.util;
+      return `<div class="resource-card"><div class="rc-head"><div class="avatar" style="background:${AVT_COLORS[ci%AVT_COLORS.length]}">${init}</div><div style="flex:1;min-width:0"><div class="rc-name">${r.name}</div><div class="rc-role">${r.role||'Contributor'}${r.derived?' · auto':''}</div></div></div>
+      <div class="util-bar-wrap"><div class="util-label"><span>Utilization</span><span class="num">${util}%</span></div><div class="util-bar"><div class="util-fill" style="width:${util}%;background:${util>85?'var(--red)':util>65?'#f59e0b':'var(--green)'}"></div></div></div></div>`;}).join('')||'<p style="color:var(--mist);font-size:.74rem">No resources assigned.</p>'}
+    </div>
+    <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="pdAddResource()">+ Assign Resource</button>`;
+}
+function pdAddResource(){const name=pdProject.name;closeModal('modal-pd');openResourceModal();setTimeout(()=>{document.getElementById('res-project').value=name;},10);}
+function openSubtask(i){
+  editSubIdx=i==null?-1:i;const s=i==null?{}:subtasks[i];
+  document.getElementById('sub-h').textContent=i==null?'Add Sub-task':'Edit Sub-task';
+  document.getElementById('sub-name').value=s.name||'';
+  document.getElementById('sub-owner').value=s.owner||pdProject.pm||'';
+  document.getElementById('sub-status').value=s.status||'Not Started';
+  document.getElementById('sub-start').value=s.start||pdProject.start;
+  document.getElementById('sub-end').value=s.end||pdProject.end;
+  document.getElementById('sub-prog').value=s.prog!=null?s.prog:0;
+  document.getElementById('sub-cost').value=s.cost!=null?s.cost:'';
+  document.getElementById('modal-subtask').classList.add('open');
+}
+function saveSubtask(){
+  const name=document.getElementById('sub-name').value.trim();
+  if(!name){toast('Sub-task name required');return;}
+  const obj={id:editSubIdx>=0?subtasks[editSubIdx].id:Date.now(),pid:pdProject.id,name,
+    owner:document.getElementById('sub-owner').value,status:document.getElementById('sub-status').value,
+    start:document.getElementById('sub-start').value,end:document.getElementById('sub-end').value,
+    prog:+document.getElementById('sub-prog').value||0,cost:+document.getElementById('sub-cost').value||0};
+  if(editSubIdx>=0)subtasks[editSubIdx]=obj;else subtasks.push(obj);
+  save();closeModal('modal-subtask');renderPdTimeline();renderPdBudget();toast(editSubIdx>=0?'Sub-task updated':'Sub-task added');
+}
+function deleteSubtask(i){if(!confirm(`Delete "${subtasks[i].name}"?`))return;subtasks.splice(i,1);save();renderPdTimeline();renderPdBudget();toast('Sub-task deleted');}
+
+// ════════════════════════════════════════════════════════════════════
+// CONTINUOUS IMPROVEMENT PROGRAM (PDCA / Kaizen)
+// ════════════════════════════════════════════════════════════════════
+function renderImprovement(){
+  const total=improvements.length;
+  const done=improvements.filter(i=>i.status==='Done').length;
+  const active=total-done;
+  const highImpact=improvements.filter(i=>i.impact==='High'&&i.status!=='Done').length;
+  document.getElementById('cip-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Initiatives</div><div class="stat-val">${total}</div><div class="stat-sub">Total tracked</div></div>
+    <div class="stat-card blue"><div class="stat-label">In Progress</div><div class="stat-val">${active}</div><div class="stat-sub">Across PDCA cycle</div></div>
+    <div class="stat-card gold"><div class="stat-label">High Impact Open</div><div class="stat-val">${highImpact}</div><div class="stat-sub">Priority focus</div></div>
+    <div class="stat-card green"><div class="stat-label">Realized</div><div class="stat-val">${done}</div><div class="stat-sub">Improvements shipped</div></div>`;
+  document.getElementById('cip-board').innerHTML=CIP_STAGES.map(stage=>{
+    const cards=improvements.map((it,i)=>({it,i})).filter(o=>o.it.stage===stage);
+    return `<div class="cip-col" data-stage="${stage}" ondragover="cipOver(event)" ondragleave="cipLeave(event)" ondrop="cipDrop(event,'${stage}')">
+      <h4>${stage}<span>${cards.length}</span></h4>
+      ${cards.map(({it,i})=>{const ic={High:'pill-hi',Medium:'pill-md',Low:'pill-lo'}[it.impact];
+        return `<div class="cip-card" draggable="true" ondragstart="cipDrag(event,${i})" ondragend="cipEnd(event)" onclick="openCip(${i})">
+          <div class="cip-t">${it.title}</div>
+          <div class="cip-m"><span class="pill ${ic}">${it.impact} impact</span><span>${it.cat}</span></div>
+          <div class="cip-m"><span>${it.project}</span>·<span>${it.owner||'—'}</span></div>
+        </div>`;}).join('')}
+    </div>`;
+  }).join('');
+}
+let cipDragIdx=-1;
+function cipDrag(e,i){cipDragIdx=i;e.target.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
+function cipEnd(e){e.target.classList.remove('dragging');}
+function cipOver(e){e.preventDefault();e.currentTarget.classList.add('drop');}
+function cipLeave(e){e.currentTarget.classList.remove('drop');}
+function cipDrop(e,stage){e.preventDefault();e.currentTarget.classList.remove('drop');
+  if(cipDragIdx<0)return;improvements[cipDragIdx].stage=stage;
+  if(stage==='Act')improvements[cipDragIdx].status='Done';else improvements[cipDragIdx].status='Active';
+  cipDragIdx=-1;save();renderImprovement();toast('Initiative moved to '+stage);}
+function openCip(i){
+  editCipIdx=i==null?-1:i;const it=i==null?{}:improvements[i];
+  document.getElementById('cip-h').textContent=i==null?'New Improvement Initiative':'Edit Initiative';
+  document.getElementById('cip-project').innerHTML=['Portfolio-wide',...projects.map(p=>p.name)].map(n=>`<option>${n}</option>`).join('');
+  document.getElementById('cip-title').value=it.title||'';
+  document.getElementById('cip-project').value=it.project||'Portfolio-wide';
+  document.getElementById('cip-cat').value=it.cat||'Process';
+  document.getElementById('cip-stage').value=it.stage||'Identify';
+  document.getElementById('cip-owner').value=it.owner||'';
+  document.getElementById('cip-impact').value=it.impact||'Medium';
+  document.getElementById('cip-effort').value=it.effort||'Medium';
+  document.getElementById('cip-desc').value=it.desc||'';
+  document.getElementById('modal-cip').classList.add('open');
+}
+function saveCip(){
+  const title=document.getElementById('cip-title').value.trim();
+  if(!title){toast('Title required');return;}
+  const stage=document.getElementById('cip-stage').value;
+  const obj={id:editCipIdx>=0?improvements[editCipIdx].id:Date.now(),title,
+    project:document.getElementById('cip-project').value,cat:document.getElementById('cip-cat').value,
+    stage,owner:document.getElementById('cip-owner').value,impact:document.getElementById('cip-impact').value,
+    effort:document.getElementById('cip-effort').value,desc:document.getElementById('cip-desc').value,
+    status:stage==='Act'?'Done':'Active'};
+  if(editCipIdx>=0)improvements[editCipIdx]=obj;else improvements.push(obj);
+  save();closeModal('modal-cip');renderImprovement();toast(editCipIdx>=0?'Initiative updated':'Initiative added');
+}
+function deleteCip(){if(editCipIdx<0||!confirm('Delete this initiative?'))return;improvements.splice(editCipIdx,1);editCipIdx=-1;save();closeModal('modal-cip');renderImprovement();toast('Initiative deleted');}
+
+// Count-up animation for stat values
+function countUp(){
+  document.querySelectorAll('.panel.active .stat-val').forEach(el=>{
+    const m=el.textContent.match(/^(\D*)([\d.]+)(.*)$/);if(!m)return;
+    const pre=m[1],target=parseFloat(m[2]),suf=m[3],dec=(m[2].split('.')[1]||'').length;
+    if(isNaN(target))return;el.classList.add('counting');
+    const t0=performance.now(),dur=900;
+    const step=now=>{const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);
+      el.textContent=pre+(target*e).toFixed(dec)+suf;
+      if(k<1)requestAnimationFrame(step);else{el.textContent=pre+target.toFixed(dec)+suf;el.classList.remove('counting');}};
+    requestAnimationFrame(step);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
 // MODALS
 // ════════════════════════════════════════════════════════════════════
 function openAddModal(){
@@ -1439,6 +1824,8 @@ function openAddModal(){
     openResourceModal();
   } else if(currentPanel==='budget'){
     openBudgetModal();
+  } else if(currentPanel==='improvement'){
+    openCip();
   } else if(currentPanel==='datasync'){
     openDataRowModal();
   } else {
@@ -1680,7 +2067,7 @@ function noData(cols){return`<tr><td colspan="${cols}" style="text-align:center;
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 
 function exportData(){
-  const data={projects,risks,decisions,changeReqs,config:CFG,exported:new Date().toISOString()};
+  const data={projects,risks,decisions,changeReqs,subtasks,improvements,config:CFG,exported:new Date().toISOString()};
   const a=document.createElement('a');
   a.href='data:application/json,'+encodeURIComponent(JSON.stringify(data,null,2));
   a.download='governance-export.json';a.click();toast('Data exported');
@@ -2038,6 +2425,7 @@ window.addEventListener('load',()=>{
     document.getElementById('loader').classList.add('out');
     setTimeout(()=>{document.getElementById('loader').style.display='none';},500);
     document.getElementById('app').classList.add('show');
+    if(!window.matchMedia('(prefers-reduced-motion:reduce)').matches) countUp();
   },1400);
 });
 </script>
