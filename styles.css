@@ -40,7 +40,7 @@ td{font-variant-numeric:tabular-nums}
 aside{background:var(--steel);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;scrollbar-width:none}
 aside::-webkit-scrollbar{display:none}
 .logo{padding:calc(28px + var(--safe-top)) 24px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
-.logo h1{font-family:'Inter',sans-serif;font-weight:800;font-size:1.4rem;letter-spacing:-.02em}
+.logo h1{font-family:'Inter',sans-serif;font-weight:800;font-size:1.4rem;letter-spacing:-.02em;line-height:1}
 .logo h1 span{color:var(--accent)}
 .logo p{font-size:.65rem;color:var(--mist);margin-top:4px;letter-spacing:.08em;text-transform:uppercase}
 nav{padding:20px 12px;flex:1}
@@ -408,8 +408,8 @@ tr.proj-row:hover td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 
 /* ════ SCANDINAVIAN MINIMAL — normal weight, airy, quiet surfaces (colors unchanged) ════ */
 *,*::before,*::after{font-weight:400!important}
-.brand-line{display:flex;align-items:center;gap:5px}
-.status-dot{width:9px;height:9px;border-radius:50%;border:none;padding:0;flex-shrink:0;cursor:pointer;background:var(--green);box-shadow:0 0 0 2px rgba(45,158,90,.22);transition:background .3s,box-shadow .3s,transform .15s}
+.brand-line{display:flex;align-items:flex-end;gap:4px}
+.status-dot{width:6px;height:6px;margin-bottom:3px;border-radius:50%;border:none;padding:0;flex-shrink:0;cursor:pointer;background:var(--green);box-shadow:0 0 0 2px rgba(45,158,90,.22);transition:background .3s,box-shadow .3s,transform .15s}
 .status-dot:hover{transform:scale(1.25)}
 .status-dot.warn{background:#d99a0b;box-shadow:0 0 0 2px rgba(217,154,11,.22)}
 /* quiet surfaces */
