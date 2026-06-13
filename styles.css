@@ -408,10 +408,10 @@ tr.proj-row:hover td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 
 /* ════ SCANDINAVIAN MINIMAL — normal weight, airy, quiet surfaces (colors unchanged) ════ */
 *,*::before,*::after{font-weight:400!important}
-.logo{display:flex;align-items:center;gap:14px}
-.status-dot{width:11px;height:11px;border-radius:50%;border:none;padding:0;flex-shrink:0;cursor:pointer;background:var(--green);box-shadow:0 0 0 3px rgba(45,158,90,.2);transition:background .3s,box-shadow .3s,transform .15s}
-.status-dot:hover{transform:scale(1.2)}
-.status-dot.warn{background:#d99a0b;box-shadow:0 0 0 3px rgba(217,154,11,.2)}
+.brand-line{display:flex;align-items:center;gap:5px}
+.status-dot{width:9px;height:9px;border-radius:50%;border:none;padding:0;flex-shrink:0;cursor:pointer;background:var(--green);box-shadow:0 0 0 2px rgba(45,158,90,.22);transition:background .3s,box-shadow .3s,transform .15s}
+.status-dot:hover{transform:scale(1.25)}
+.status-dot.warn{background:#d99a0b;box-shadow:0 0 0 2px rgba(217,154,11,.22)}
 /* quiet surfaces */
 .stat-card,.kpi,.cip-col,.cip-card,.table-wrap,.mini-form,.btn{box-shadow:none!important}
 .stat-card::before{height:2px}
@@ -433,7 +433,7 @@ th,td{padding:14px 16px}
 @media(max-width:768px){.content{padding:24px 18px 40px}.topbar{padding:16px 18px}}
 
 /* ════ SYSTEM MENU POPOVER (anchored to status dot) ════ */
-.sys-menu{position:fixed;top:16px;left:84px;z-index:9500;width:230px;background:var(--card);color:var(--ink);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.18);padding:10px;opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top left;pointer-events:none;transition:opacity .16s var(--ease),transform .16s var(--ease)}
+.sys-menu{position:fixed;top:72px;left:20px;z-index:9500;width:222px;background:var(--card);color:var(--ink);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.18);padding:10px;opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top left;pointer-events:none;transition:opacity .16s var(--ease),transform .16s var(--ease)}
 .sys-menu.open{opacity:1;transform:none;pointer-events:auto}
 .sys-menu-status{display:flex;align-items:center;gap:8px;font-size:.74rem;padding:4px 6px 8px}
 .sys-status-dot{width:9px;height:9px;border-radius:50%;background:var(--green);flex-shrink:0}
@@ -443,19 +443,35 @@ th,td{padding:14px 16px}
 .sys-menu-btn:hover{background:var(--paper)}
 .sys-menu-btn svg{width:15px;height:15px;flex-shrink:0;stroke:var(--mist)}
 
-/* ════ ICONIZED HOVER-EXPAND SIDEBAR + TOPBAR (desktop only) ════ */
-@media(min-width:901px){
-  #app{grid-template-columns:72px 1fr}
-  aside{width:72px;transition:width .22s var(--ease);z-index:200;overflow-x:hidden}
-  aside:hover{width:248px;box-shadow:var(--shadow-lg)}
-  .logo{padding-left:30px}
-  .logo-text{overflow:hidden;white-space:nowrap;opacity:0;transition:opacity .15s}
-  aside:hover .logo-text{opacity:1}
-  .nav-item{overflow:hidden;white-space:nowrap;padding-left:16px}
-  .nav-section,.sidebar-footer{overflow:hidden;white-space:nowrap;opacity:0;transition:opacity .15s}
-  aside:hover .nav-section,aside:hover .sidebar-footer{opacity:1}
-  /* topbar action buttons: icon only, label on hover */
-  .topbar-actions .btn{gap:0}
-  .topbar-actions .btn .lbl{display:inline-block;max-width:0;overflow:hidden;white-space:nowrap;opacity:0;transition:max-width .25s var(--ease),opacity .2s,margin .25s}
-  .topbar-actions .btn:hover .lbl{max-width:140px;opacity:1;margin-left:6px}
-}
+/* ════ TOP NAVIGATION BAR (icon-only) ════ */
+.topbar{flex-wrap:wrap;gap:10px}
+.topnav{display:flex;align-items:center;gap:2px;flex-wrap:wrap}
+.topnav .nav-item{width:auto;padding:9px;border-radius:6px;color:var(--mist);position:relative;background:none}
+.topnav .nav-item svg{width:18px;height:18px;stroke:var(--mist);opacity:1}
+.topnav .nav-item:hover{background:var(--paper)}
+.topnav .nav-item:hover svg{stroke:var(--ink)}
+.topnav .nav-item.active{background:rgba(28,92,170,.1);box-shadow:none!important;border-radius:6px}
+.topnav .nav-item.active svg{stroke:var(--accent)}
+.topnav .nav-badge{position:absolute;top:1px;right:1px;margin:0;min-width:15px;height:15px;padding:0 3px;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-size:.5rem;line-height:1;border-radius:8px}
+.topnav .nav-badge:empty{display:none}
+.page-title{display:none}
+/* icon-only chrome buttons — no label */
+.btn.icon-only{gap:0;padding:9px}
+.btn.icon-only .lbl{display:none}
+
+/* ════ SIDEBAR: brand dot after wordmark + project lifecycle stepper ════ */
+.logo{display:block}
+.lifecycle{padding:18px 22px;flex:1;overflow-y:auto;scrollbar-width:none}
+.lifecycle::-webkit-scrollbar{display:none}
+.lifecycle .nav-section{padding:0;margin:0 0 16px}
+.lc-step{display:flex;gap:12px;position:relative;padding-bottom:20px}
+.lc-step:last-of-type{padding-bottom:8px}
+.lc-step:not(:last-of-type)::before{content:'';position:absolute;left:11px;top:24px;bottom:-2px;width:1.5px;background:rgba(255,255,255,.16)}
+.lc-step.done:not(:last-of-type)::before{background:var(--green)}
+.lc-marker{width:23px;height:23px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:.62rem;color:rgba(255,255,255,.6);flex-shrink:0;background:var(--steel);z-index:1}
+.lc-step.done .lc-marker{background:var(--green);border-color:var(--green);color:#fff}
+.lc-step.current .lc-marker{border-color:var(--accent);color:#fff;box-shadow:0 0 0 3px rgba(28,92,170,.3)}
+.lc-name{font-size:.76rem;color:rgba(255,255,255,.88);line-height:1.2}
+.lc-step.upcoming .lc-name{color:rgba(255,255,255,.4)}
+.lc-sub{font-size:.6rem;color:var(--mist);margin-top:2px}
+.lc-foot{font-size:.6rem;color:var(--mist);margin-top:4px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}

@@ -22,14 +22,14 @@ let decisions   = JSON.parse(localStorage.getItem('nx-decisions')||'[]');
 let changeReqs  = JSON.parse(localStorage.getItem('nx-crs')||'[]');
 let subtasks    = JSON.parse(localStorage.getItem('nx-subtasks')||'[]');
 let improvements= JSON.parse(localStorage.getItem('nx-cip')||'[]');
-let editIdx=-1, currentPanel='dashboard';
+let editIdx=-1, currentPanel='governance';
 let pdProject=null, editSubIdx=-1, editCipIdx=-1;
 const CIP_STAGES=['Identify','Plan','Do','Check','Act'];
 
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const COLORS=['#e8440a','#c9a84c','#2d9e5a','#3b6ef5','#7c3aed','#0891b2','#db2777'];
 const AVT_COLORS=['#e8440a','#3b6ef5','#2d9e5a','#7c3aed','#c9a84c'];
-const TITLES={dashboard:'Dashboard',governance:'Governance Board',projects:'Projects',gantt:'Gantt / Timeline',milestones:'Milestones',risks:'Risk Register',budget:'Budget Tracker',resources:'Resources',improvement:'Continuous Improvement',datasync:'Data Sync — DATA.xlsx'};
+const TITLES={dashboard:'Dashboard',governance:'Dashboard',projects:'Projects',gantt:'Gantt / Timeline',milestones:'Milestones',risks:'Risk Register',budget:'Budget Tracker',resources:'Resources',improvement:'Continuous Improvement',datasync:'Data Sync — DATA.xlsx'};
 const ADD_LABELS={dashboard:'Add Project',governance:'Log Decision',projects:'Add Project',gantt:'Add Project',milestones:'Add Milestone',risks:'Add Risk',budget:'Update Budget',resources:'Add Resource',improvement:'New Initiative',datasync:'Add Row'};
 let editRiskIdx=-1, editDecIdx=-1, editCRIdx=-1, editResIdx=-1;
 let customMilestones=JSON.parse(localStorage.getItem('nx-milestones')||'[]');
@@ -216,8 +216,9 @@ function nav(id,el){
 }
 
 function renderPanel(id){
-  const fn={dashboard:renderDashboard,governance:renderGovernance,projects:renderProjects,gantt:renderGantt,milestones:renderMilestones,risks:renderRisks,budget:renderBudget,resources:renderResources,improvement:renderImprovement,datasync:renderDataSync};
+  const fn={governance:renderGovernance,projects:renderProjects,gantt:renderGantt,milestones:renderMilestones,risks:renderRisks,budget:renderBudget,resources:renderResources,improvement:renderImprovement,datasync:renderDataSync};
   if(fn[id]) fn[id]();
+  renderLifecycle();
   if(!window.matchMedia('(prefers-reduced-motion:reduce)').matches) requestAnimationFrame(countUp);
 }
 
@@ -629,6 +630,7 @@ function openProjectDetail(i){
   document.querySelectorAll('#modal-pd .tab-pane').forEach((p,pi)=>p.classList.toggle('active',pi===0));
   renderPdTimeline();renderPdRisks();renderPdBudget();renderPdResources();
   document.getElementById('modal-pd').classList.add('open');
+  renderLifecycle();
 }
 function pdTab(name,el){
   document.querySelectorAll('#modal-pd .tab').forEach(t=>t.classList.remove('active'));
@@ -998,7 +1000,7 @@ function openCRModal(){
   document.getElementById('modal-cr').classList.add('open');
 }
 
-function closeModal(id){document.getElementById(id).classList.remove('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open');renderLifecycle();}
 
 function editProject(i){
   editIdx=i;const p=projects[i];
@@ -1108,6 +1110,32 @@ function updateSysMenu(ok){
   const gh=document.getElementById('sys-gh-text');if(gh)gh.textContent='GitHub data: '+(ghConnected()?'Connected':'Not connected');
 }
 function openDataSync(){closeSysMenu();nav('datasync',null);}
+
+// ── PROJECT LIFECYCLE (sidebar step flow: start → end) ──
+const LIFECYCLE=[
+  {name:'Initiation',sub:'Charter & scope'},
+  {name:'Planning',sub:'Schedule & budget'},
+  {name:'Execution',sub:'Build & deliver'},
+  {name:'Monitoring & Control',sub:'Track & adjust'},
+  {name:'Closure',sub:'Handover & review'}
+];
+function _phaseFromProgress(p){return p>=95?4:p>=70?3:p>=30?2:p>=10?1:0;}
+function renderLifecycle(){
+  const el=document.getElementById('lifecycle-steps');if(!el)return;
+  const pd=document.getElementById('modal-pd');
+  const usePd=pd&&pd.classList.contains('open')&&pdProject;
+  let prog,label;
+  if(usePd){prog=+pdProject.progress||0;label=pdProject.name;}
+  else if(projects.length){prog=Math.round(projects.reduce((s,p)=>s+(+p.progress||0),0)/projects.length);label='Portfolio average';}
+  else{prog=0;label='No projects yet';}
+  const active=prog>=100?4:_phaseFromProgress(prog);
+  const done=prog>=100;
+  el.innerHTML=LIFECYCLE.map((s,i)=>{
+    const cls=(done||i<active)?'done':i===active?'current':'upcoming';
+    const mark=(done||i<active)?'✓':(i+1);
+    return `<div class="lc-step ${cls}"><span class="lc-marker">${mark}</span><div class="lc-body"><div class="lc-name">${s.name}</div><div class="lc-sub">${s.sub}</div></div></div>`;
+  }).join('')+`<div class="lc-foot">${label} · ${prog}%</div>`;
+}
 
 document.querySelectorAll('.modal-bg').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
 
@@ -1453,7 +1481,8 @@ window.addEventListener('load',()=>{
   seedData();
   save();
   applyConfig();
-  renderDashboard();
+  renderGovernance();
+  renderLifecycle();
   setTimeout(()=>{
     document.getElementById('loader').classList.add('out');
     setTimeout(()=>{document.getElementById('loader').style.display='none';},500);
