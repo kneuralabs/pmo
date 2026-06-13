@@ -442,11 +442,47 @@ function renderGantt(){
       <div class="gantt-row-label">${p.name}<small>${p.pm}</small></div>
       <div class="gantt-timeline">
         <div class="today-line" style="left:${todayPct}%"></div>
-        ${bs<100&&be>0?`<div class="gantt-bar ${cls}" style="left:${bs}%;width:${bw}%;animation:fadeUp .4s ${.05*i+.1}s var(--ease) both">
-          <span class="gantt-bar-label">${p.progress}% · ${p.name}</span></div>`:''}
+        ${bs<100&&be>0?`<div class="gantt-bar ${cls}" data-idx="${i}" title="Drag to reschedule · drag edges to resize" style="left:${bs}%;width:${bw}%;animation:fadeUp .4s ${.05*i+.1}s var(--ease) both">
+          <span class="gantt-handle l"></span><span class="gantt-bar-label">${p.progress}% · ${p.name}</span><span class="gantt-handle r"></span></div>`:''}
       </div>
     </div>`;
   }).join('')||'<div style="padding:24px;text-align:center;color:var(--mist)">Add projects to see timeline</div>';
+  setupGanttDrag(rangeStart,totalDays);
+}
+
+// Drag a gantt bar to reschedule (move), or drag its edges to resize start/end
+function setupGanttDrag(rangeStart,totalDays){
+  const dayMs=86400000,rS=rangeStart.getTime(),rE=rS+totalDays*dayMs;
+  const iso=ms=>new Date(ms).toISOString().slice(0,10);
+  document.querySelectorAll('#gantt-body .gantt-bar').forEach(bar=>{
+    const idx=+bar.dataset.idx;
+    let mode,startX,plw,os,oe,curS,curE,moved;
+    const onMove=e=>{
+      const delta=Math.round((e.clientX-startX)/plw*totalDays)*dayMs;
+      if(mode==='move'){const d=Math.max(rS-os,Math.min(rE-oe,delta));curS=os+d;curE=oe+d;}
+      else if(mode==='l'){curS=Math.max(rS,Math.min(oe-dayMs,os+delta));curE=oe;}
+      else{curS=os;curE=Math.min(rE,Math.max(os+dayMs,oe+delta));}
+      if(curS!==os||curE!==oe)moved=true;
+      bar.style.left=(curS-rS)/dayMs/totalDays*100+'%';
+      bar.style.width=Math.max(1,(curE-curS)/dayMs/totalDays*100)+'%';
+    };
+    const onUp=e=>{
+      bar.releasePointerCapture(e.pointerId);
+      bar.removeEventListener('pointermove',onMove);bar.removeEventListener('pointerup',onUp);
+      bar.classList.remove('dragging');
+      if(moved){projects[idx].start=iso(curS);projects[idx].end=iso(curE);save();toast(projects[idx].name+' rescheduled');renderGantt();}
+    };
+    bar.addEventListener('pointerdown',e=>{
+      if(e.button!==0)return;
+      mode=e.target.classList.contains('gantt-handle')?(e.target.classList.contains('l')?'l':'r'):'move';
+      startX=e.clientX;plw=bar.parentElement.getBoundingClientRect().width;
+      os=new Date(projects[idx].start).getTime();oe=new Date(projects[idx].end).getTime();
+      curS=os;curE=oe;moved=false;
+      bar.classList.add('dragging');bar.setPointerCapture(e.pointerId);
+      bar.addEventListener('pointermove',onMove);bar.addEventListener('pointerup',onUp);
+      e.preventDefault();
+    });
+  });
 }
 
 // ════════════════════════════════════════════════════════════════════
