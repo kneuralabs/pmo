@@ -803,17 +803,12 @@ function saveCip(){
 }
 function deleteCip(){if(editCipIdx<0||!confirm('Delete this initiative?'))return;improvements.splice(editCipIdx,1);editCipIdx=-1;save();closeModal('modal-cip');renderImprovement();toast('Initiative deleted');}
 
-// Count-up animation for stat values
+// Flip-card reveal for stat values
 function countUp(){
-  document.querySelectorAll('.panel.active .stat-val').forEach(el=>{
-    const m=el.textContent.match(/^(\D*)([\d.]+)(.*)$/);if(!m)return;
-    const pre=m[1],target=parseFloat(m[2]),suf=m[3],dec=(m[2].split('.')[1]||'').length;
-    if(isNaN(target))return;el.classList.add('counting');
-    const t0=performance.now(),dur=900;
-    const step=now=>{const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);
-      el.textContent=pre+(target*e).toFixed(dec)+suf;
-      if(k<1)requestAnimationFrame(step);else{el.textContent=pre+target.toFixed(dec)+suf;el.classList.remove('counting');}};
-    requestAnimationFrame(step);
+  document.querySelectorAll('.panel.active .stat-val').forEach((el,i)=>{
+    el.classList.remove('flip');void el.offsetWidth; // restart animation
+    el.style.animationDelay=(i*0.08)+'s';
+    el.classList.add('flip');
   });
 }
 

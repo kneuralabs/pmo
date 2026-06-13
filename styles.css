@@ -83,7 +83,7 @@ main{display:flex;flex-direction:column;min-height:100vh;background:var(--paper)
 
 /* STATS ROW */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:default}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:default;opacity:1;transform:none}
 .stat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
 .stat-card.gold::before{background:var(--gold)}
@@ -355,7 +355,9 @@ textarea{resize:vertical;min-height:72px}
 /* stat cards: staggered pop + hover float */
 .stat-card{animation:popIn .5s var(--ease) both}
 .stat-card:hover{animation:floatGlow 2.4s ease-in-out infinite}
-.stat-val.counting{color:var(--accent)}
+.stat-val{transform-origin:50% 0;backface-visibility:hidden}
+@keyframes flipIn{0%{transform:perspective(420px) rotateX(-90deg);opacity:0}55%{transform:perspective(420px) rotateX(12deg);opacity:1}100%{transform:perspective(420px) rotateX(0);opacity:1}}
+.stat-val.flip{animation:flipIn .55s var(--ease) both}
 /* table rows reveal */
 tbody tr{animation:fadeUp .45s var(--ease) both}
 tbody tr:nth-child(1){animation-delay:.02s}tbody tr:nth-child(2){animation-delay:.06s}tbody tr:nth-child(3){animation-delay:.1s}tbody tr:nth-child(4){animation-delay:.14s}tbody tr:nth-child(5){animation-delay:.18s}tbody tr:nth-child(n+6){animation-delay:.22s}
