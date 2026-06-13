@@ -41,56 +41,15 @@
 <div id="app">
 <aside id="sidebar">
   <div class="logo">
-    <button id="status-dot" class="status-dot" onclick="toggleSysMenu(event)" title="System status" aria-label="System status, GitHub data connection &amp; settings"></button>
-    <div class="logo-text">
-      <h1 id="logo-h1">Kneura<span>labs</span></h1>
-      <p id="logo-sub">AI Governance Platform</p>
+    <div class="brand-line">
+      <h1 id="logo-h1">Kneura<span>labs</span></h1><button id="status-dot" class="status-dot" onclick="toggleSysMenu(event)" title="System status" aria-label="System status, GitHub data connection &amp; settings"></button>
     </div>
+    <p id="logo-sub">AI Governance Platform</p>
   </div>
-  <nav>
-    <div class="nav-section">Workspace</div>
-    <button class="nav-item active" onclick="nav('dashboard',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      Dashboard
-    </button>
-    <button class="nav-item" onclick="nav('governance',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-      Governance Board
-      <span class="nav-badge" id="gov-alert-count">0</span>
-    </button>
-    <button class="nav-item" onclick="nav('projects',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-      Projects
-      <span class="nav-badge" id="proj-count">0</span>
-    </button>
-    <button class="nav-item" onclick="nav('gantt',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-      Gantt / Timeline
-    </button>
-    <button class="nav-item" onclick="nav('milestones',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      Milestones
-    </button>
-    <div class="nav-section">Governance</div>
-    <button class="nav-item" onclick="nav('risks',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      Risk Register
-      <span class="nav-badge" id="risk-count">0</span>
-    </button>
-    <button class="nav-item" onclick="nav('budget',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-      Budget Tracker
-    </button>
-    <button class="nav-item" onclick="nav('resources',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      Resources
-    </button>
-    <button class="nav-item" onclick="nav('improvement',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-      Continuous Improvement
-      <span class="nav-badge" id="cip-count"></span>
-    </button>
-  </nav>
+  <div class="lifecycle">
+    <div class="nav-section">Project Lifecycle</div>
+    <div id="lifecycle-steps"></div>
+  </div>
   <div class="sidebar-footer" id="sidebar-footer">v3.0 · AI Governance Platform<br id="footer-name-br">© 2025 Kneuralabs LLC</div>
 </aside>
 
@@ -111,18 +70,48 @@
 <main>
   <div class="topbar">
     <div class="topbar-left">
-      <button class="menu-toggle" onclick="toggleSidebar()">
+      <button class="menu-toggle" onclick="toggleSidebar()" title="Menu">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <span class="page-title" id="page-title">Dashboard</span>
+      <nav class="topnav" id="topnav">
+        <button class="nav-item active" onclick="nav('governance',this)" title="Dashboard" aria-label="Dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span class="nav-badge" id="gov-alert-count">0</span>
+        </button>
+        <button class="nav-item" onclick="nav('projects',this)" title="Projects" aria-label="Projects">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+          <span class="nav-badge" id="proj-count">0</span>
+        </button>
+        <button class="nav-item" onclick="nav('gantt',this)" title="Gantt / Timeline" aria-label="Gantt / Timeline">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+        <button class="nav-item" onclick="nav('milestones',this)" title="Milestones" aria-label="Milestones">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </button>
+        <button class="nav-item" onclick="nav('risks',this)" title="Risk Register" aria-label="Risk Register">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span class="nav-badge" id="risk-count">0</span>
+        </button>
+        <button class="nav-item" onclick="nav('budget',this)" title="Budget Tracker" aria-label="Budget Tracker">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </button>
+        <button class="nav-item" onclick="nav('resources',this)" title="Resources" aria-label="Resources">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        </button>
+        <button class="nav-item" onclick="nav('improvement',this)" title="Continuous Improvement" aria-label="Continuous Improvement">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          <span class="nav-badge" id="cip-count"></span>
+        </button>
+      </nav>
     </div>
     <div class="topbar-actions">
-      <button class="btn btn-outline btn-sm" onclick="exportData()" title="Export">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <button class="btn btn-outline btn-sm icon-only" onclick="exportData()" title="Export" aria-label="Export">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span class="lbl">Export</span>
       </button>
-      <button class="btn btn-primary btn-sm" id="main-add-btn" onclick="openAddModal()" title="Add">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <button class="btn btn-primary btn-sm icon-only" id="main-add-btn" onclick="openAddModal()" title="Add" aria-label="Add">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         <span class="lbl" id="add-label">Add Project</span>
       </button>
     </div>
@@ -130,31 +119,8 @@
 
   <div class="content">
 
-    <!-- DASHBOARD -->
-    <div class="panel active" id="panel-dashboard">
-      <div class="stats-grid stagger">
-        <div class="stat-card"><div class="stat-label">Total Projects</div><div class="stat-val" id="s-total">0</div><div class="stat-sub">Active portfolio</div></div>
-        <div class="stat-card green"><div class="stat-label">On Track</div><div class="stat-val" id="s-ontrack">0</div><div class="stat-sub">Green status</div></div>
-        <div class="stat-card gold"><div class="stat-label">At Risk</div><div class="stat-val" id="s-atrisk">0</div><div class="stat-sub">Needs attention</div></div>
-        <div class="stat-card blue"><div class="stat-label">Risks Open</div><div class="stat-val" id="s-risks">0</div><div class="stat-sub">Unmitigated</div></div>
-      </div>
-      <div class="section-header">
-        <span class="section-title">Recent Projects</span>
-        <button class="btn btn-outline btn-sm" onclick="nav('projects',document.querySelector('[onclick*=projects]'))">View All →</button>
-      </div>
-      <div class="table-wrap" style="margin-bottom:28px">
-        <table><thead><tr><th>Project</th><th>Status</th><th>Progress</th><th>Due</th><th>PM</th></tr></thead>
-        <tbody id="dashboard-tbody"></tbody></table>
-      </div>
-      <div class="section-header"><span class="section-title">Open Risks</span></div>
-      <div class="table-wrap">
-        <table><thead><tr><th>Risk</th><th>Project</th><th>Severity</th><th>Owner</th></tr></thead>
-        <tbody id="dash-risks-tbody"></tbody></table>
-      </div>
-    </div>
-
-    <!-- GOVERNANCE BOARD -->
-    <div class="panel" id="panel-governance">
+    <!-- DASHBOARD (consolidated governance board) -->
+    <div class="panel active" id="panel-governance">
       <div class="stats-grid stagger" id="gov-stats"></div>
       <div class="gov-grid" style="margin-bottom:16px">
         <!-- Health Score -->
