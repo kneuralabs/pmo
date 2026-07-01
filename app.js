@@ -406,7 +406,7 @@ function renderProjects(){
       <td style="font-size:.7rem">${esc(p.type)}</td>
       <td>${badgeHTML(p.status)}</td>
       <td><div class="prog-wrap" style="width:70px"><div class="prog-fill" style="width:${p.progress}%"></div></div> <small class="num" style="font-size:.6rem;color:var(--mist)">${p.progress}%</small></td>
-      <td class="num" style="font-size:.73rem;white-space:nowrap">${CFG.currency}${(p.budget/1000).toFixed(0)}k</td>
+      <td class="num" style="font-size:.73rem;white-space:nowrap">${esc(CFG.currency)}${(p.budget/1000).toFixed(0)}k</td>
       <td style="white-space:nowrap;font-size:.7rem">${fmt(p.start)}</td>
       <td style="white-space:nowrap;font-size:.7rem">${fmt(p.end)}</td>
       <td style="font-size:.7rem">${esc(p.pm)}</td>
@@ -563,7 +563,7 @@ function renderBudget(){
   const rem=total-spent;
   const r=70,cx=90,cy=90,circ=2*Math.PI*r;
   const spentPct=total>0?(spent/total):0;
-  const cur=CFG.currency;
+  const cur=esc(CFG.currency);
   document.getElementById('donut-area').innerHTML=`
     <svg class="donut" width="180" height="180" viewBox="0 0 180 180">
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#eee" stroke-width="18"/>
@@ -660,7 +660,7 @@ function openProjectDetail(i){
   pdProject=projects[i];if(!pdProject)return;
   document.getElementById('pd-title').textContent=pdProject.name;
   document.getElementById('pd-badges').innerHTML=badgeHTML(pdProject.status)+` <span class="badge badge-info">${esc(pdProject.type)}</span>`;
-  document.getElementById('pd-meta').innerHTML=`<span>PM <b>${esc(pdProject.pm)}</b></span><span>Start <b>${fmt(pdProject.start)}</b></span><span>End <b>${fmt(pdProject.end)}</b></span><span>Progress <b>${pdProject.progress}%</b></span><span>Budget <b>${CFG.currency}${(pdProject.budget/1000).toFixed(0)}k</b></span>`;
+  document.getElementById('pd-meta').innerHTML=`<span>PM <b>${esc(pdProject.pm)}</b></span><span>Start <b>${fmt(pdProject.start)}</b></span><span>End <b>${fmt(pdProject.end)}</b></span><span>Progress <b>${pdProject.progress}%</b></span><span>Budget <b>${esc(CFG.currency)}${(pdProject.budget/1000).toFixed(0)}k</b></span>`;
   // reset to first tab
   document.querySelectorAll('#modal-pd .tab').forEach((t,ti)=>t.classList.toggle('active',ti===0));
   document.querySelectorAll('#modal-pd .tab-pane').forEach((p,pi)=>p.classList.toggle('active',pi===0));
@@ -687,7 +687,7 @@ function renderPdTimeline(){
     return `<div class="st-row">
       <div class="st-name">${esc(s.name)}<small>${esc(s.owner||'—')} · ${esc(s.status)}</small></div>
       <div class="st-track"><div class="st-bar" style="left:${left}%;width:${w}%;background:${col}">${s.prog}%</div></div>
-      <div style="display:flex;gap:4px;white-space:nowrap"><span class="num" style="font-size:.62rem;color:var(--mist);align-self:center">${CFG.currency}${((s.cost||0)/1000).toFixed(0)}k</span>
+      <div style="display:flex;gap:4px;white-space:nowrap"><span class="num" style="font-size:.62rem;color:var(--mist);align-self:center">${esc(CFG.currency)}${((s.cost||0)/1000).toFixed(0)}k</span>
         <button class="btn btn-outline btn-sm" onclick="openSubtask(${si})">Edit</button>
         <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="deleteSubtask(${si})">×</button></div>
     </div>`;
@@ -729,10 +729,10 @@ function renderPdBudget(){
   const over=spent>total;
   document.getElementById('pd-budget').innerHTML=`
     <div class="kpi-row">
-      <div class="kpi"><div class="l">Total Budget</div><div class="v">${CFG.currency}${(total/1000).toFixed(0)}k</div></div>
-      <div class="kpi"><div class="l">Spent</div><div class="v" style="color:${over?'var(--red)':'inherit'}">${CFG.currency}${(spent/1000).toFixed(0)}k</div></div>
-      <div class="kpi"><div class="l">Remaining</div><div class="v" style="color:${rem<0?'var(--red)':'var(--green)'}">${CFG.currency}${(rem/1000).toFixed(0)}k</div></div>
-      <div class="kpi"><div class="l">Planned (sub-tasks)</div><div class="v">${CFG.currency}${(planned/1000).toFixed(0)}k</div></div>
+      <div class="kpi"><div class="l">Total Budget</div><div class="v">${esc(CFG.currency)}${(total/1000).toFixed(0)}k</div></div>
+      <div class="kpi"><div class="l">Spent</div><div class="v" style="color:${over?'var(--red)':'inherit'}">${esc(CFG.currency)}${(spent/1000).toFixed(0)}k</div></div>
+      <div class="kpi"><div class="l">Remaining</div><div class="v" style="color:${rem<0?'var(--red)':'var(--green)'}">${esc(CFG.currency)}${(rem/1000).toFixed(0)}k</div></div>
+      <div class="kpi"><div class="l">Planned (sub-tasks)</div><div class="v">${esc(CFG.currency)}${(planned/1000).toFixed(0)}k</div></div>
     </div>
     <div class="util-label"><span>Budget consumed</span><span class="num" style="color:${over?'var(--red)':'var(--mist)'}">${pct}%</span></div>
     <div class="util-bar" style="height:10px"><div class="util-fill" style="width:${pct}%;background:${over?'var(--red)':pct>80?'#f59e0b':'var(--green)'}"></div></div>
@@ -1104,7 +1104,7 @@ function toggleRisk(i){risks[i].status=risks[i].status==='Open'?'Mitigated':'Ope
 function badgeHTML(s){const m={'On Track':'badge-on','At Risk':'badge-risk','Off Track':'badge-off','Planning':'badge-plan','Completed':'badge-done'};return`<span class="badge ${m[s]||'badge-plan'}">${esc(s)}</span>`;}
 function sevBadge(s){const m={Critical:'badge-off',High:'badge-off',Medium:'badge-risk',Low:'badge-done'};return`<span class="badge ${m[s]||'badge-plan'}">${esc(s)}</span>`;}
 function probBadge(s){const m={High:'badge-risk',Medium:'badge-plan',Low:'badge-done'};return`<span class="badge ${m[s]||'badge-plan'}">${esc(s)}</span>`;}
-function fmt(d){if(!d)return'—';try{const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString(CFG.dateFmt,{month:'short',day:'numeric',year:'numeric'});}catch{return d;}}
+function fmt(d){if(!d)return'—';try{const dt=new Date(d+'T00:00:00');return esc(dt.toLocaleDateString(CFG.dateFmt,{month:'short',day:'numeric',year:'numeric'}));}catch{return esc(d);}}
 function noData(cols){return`<tr><td colspan="${cols}" style="text-align:center;color:var(--mist);padding:24px">No data</td></tr>`;}
 
 // ── OUTPUT ESCAPING (XSS guard) ──────────────────────────────────────
