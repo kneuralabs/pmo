@@ -63,7 +63,7 @@ function seedData(){
     {id:3,title:'Regulatory non-compliance',project:'AI Ethics Framework',cat:'Compliance',sev:'Critical',prob:'Low',owner:'Sarah Chen',mit:'Legal review bi-weekly',status:'Open'},
     {id:4,title:'Key talent attrition',project:'Zero Trust Security',cat:'Resource',sev:'High',prob:'Medium',owner:'Marcus Velez',mit:'Retention bonuses & cross-training',status:'Open'},
   ];
-  const y2=y; const now=new Date();
+  const y2=y;
   decisions=[
     {id:1,title:'Approved additional QA sprint for ERP',project:'Legacy ERP Migration',type:'Approved',maker:'Steering Committee',date:`${y2}-04-10`,impact:'High',rationale:'Critical defects found in UAT phase requiring dedicated quality gate'},
     {id:2,title:'Deferred Zero Trust Phase 2',project:'Zero Trust Security',type:'Deferred',maker:'CTO',date:`${y2}-04-22`,impact:'Medium',rationale:'Resource constraints; Phase 1 must stabilize first'},
@@ -132,11 +132,11 @@ function applyConfig(){
   document.getElementById('doc-title').textContent=c.company+' — AI Governance Platform';
   // Logo text
   const half=Math.ceil(c.company.length/2);
-  document.getElementById('logo-h1').innerHTML=c.company.slice(0,half)+'<span>'+c.company.slice(half)+'</span>';
+  document.getElementById('logo-h1').innerHTML=esc(c.company.slice(0,half))+'<span>'+esc(c.company.slice(half))+'</span>';
   document.getElementById('logo-sub').textContent=c.tagline;
-  document.getElementById('ld-logo-text').innerHTML=c.company.slice(0,half)+'<span>'+c.company.slice(half)+'</span>';
+  document.getElementById('ld-logo-text').innerHTML=esc(c.company.slice(0,half))+'<span>'+esc(c.company.slice(half))+'</span>';
   document.getElementById('ld-sub-text').textContent=c.tagline;
-  document.getElementById('sidebar-footer').innerHTML=c.footer.replace(/\n/g,'<br>');
+  document.getElementById('sidebar-footer').innerHTML=esc(c.footer).replace(/\n/g,'<br>');
   // Colors
   document.documentElement.style.setProperty('--accent',c.accent);
   document.documentElement.style.setProperty('--accent-h',shadeColor(c.accent,-20));
@@ -154,7 +154,7 @@ function shadeColor(col,pct){
 }
 
 function populateTypeSelects(){
-  const opts=CFG.projectTypes.map(t=>`<option>${t}</option>`).join('');
+  const opts=CFG.projectTypes.map(t=>`<option>${esc(t)}</option>`).join('');
   ['f-type'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
 }
 
@@ -239,12 +239,12 @@ function renderDashboard(){
     if(card){card.style.cursor='pointer';card.onclick=()=>nav(panel,document.querySelector(`[onclick*="${panel}"]`));}
   });
   document.getElementById('dashboard-tbody').innerHTML=projects.slice(0,5).map(p=>`
-    <tr><td><strong>${p.name}</strong><br><small style="color:var(--mist)">${p.type}</small></td>
+    <tr><td><strong>${esc(p.name)}</strong><br><small style="color:var(--mist)">${esc(p.type)}</small></td>
     <td>${badgeHTML(p.status)}</td>
     <td><div class="prog-wrap"><div class="prog-fill" style="width:${p.progress}%"></div></div> <small style="color:var(--mist);font-size:.62rem">${p.progress}%</small></td>
-    <td style="white-space:nowrap">${fmt(p.end)}</td><td>${p.pm}</td></tr>`).join('')||noData(5);
+    <td style="white-space:nowrap">${fmt(p.end)}</td><td>${esc(p.pm)}</td></tr>`).join('')||noData(5);
   document.getElementById('dash-risks-tbody').innerHTML=risks.filter(r=>r.status==='Open').slice(0,4).map(r=>`
-    <tr><td><strong>${r.title}</strong></td><td>${r.project}</td><td>${sevBadge(r.sev)}</td><td>${r.owner}</td></tr>`).join('')||noData(4);
+    <tr><td><strong>${esc(r.title)}</strong></td><td>${esc(r.project)}</td><td>${sevBadge(r.sev)}</td><td>${esc(r.owner)}</td></tr>`).join('')||noData(4);
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -310,7 +310,7 @@ function renderGovernance(){
       const gStatus=p.status==='On Track'||p.status==='Completed'?'pass':p.status==='At Risk'?'review':p.status==='Off Track'?'block':'pending';
       const gLabel={pass:'Passed',review:'Review',block:'Blocked',pending:'Pending'}[gStatus];
       const gClass={pass:'badge-on',review:'badge-risk',block:'badge-off',pending:'badge-plan'}[gStatus];
-      return `<tr><td style="font-size:.72rem;font-weight:500">${p.name}</td><td style="font-size:.7rem">${gate}</td><td><span class="badge ${gClass}">${gLabel}</span></td></tr>`;
+      return `<tr><td style="font-size:.72rem;font-weight:500">${esc(p.name)}</td><td style="font-size:.7rem">${gate}</td><td><span class="badge ${gClass}">${gLabel}</span></td></tr>`;
     }).join('')||'<tr><td colspan="3" style="text-align:center;color:var(--mist);padding:16px">No projects</td></tr>'}
   </tbody></table></div>`;
 
@@ -331,7 +331,7 @@ function renderGovernance(){
         return s>90?'warn':'ok';
       });
       return `<div class="policy-row">
-        <div class="policy-name">${p.name}</div>
+        <div class="policy-name">${esc(p.name)}</div>
         <div class="policy-checks">${checks.map(c=>`<div class="chk chk-${c}" title="${{ok:'Compliant',warn:'Review needed',fail:'Non-compliant',na:'N/A'}[c]}">${{ok:'✓',warn:'!',fail:'✗',na:'–'}[c]}</div>`).join('')}</div>
       </div>`;
     }).join(''):
@@ -341,10 +341,10 @@ function renderGovernance(){
   document.getElementById('gov-decisions').innerHTML=decisions.length?
     decisions.slice(0,5).map((d,i)=>`
       <div class="decision-item">
-        <div class="dec-type dec-${d.type.toLowerCase()}">${d.type}</div>
+        <div class="dec-type dec-${esc(d.type.toLowerCase())}">${esc(d.type)}</div>
         <div class="dec-body">
-          <div class="dec-title">${d.title}</div>
-          <div class="dec-meta">${d.project} · ${d.maker} · ${fmt(d.date)}</div>
+          <div class="dec-title">${esc(d.title)}</div>
+          <div class="dec-meta">${esc(d.project)} · ${esc(d.maker)} · ${fmt(d.date)}</div>
         </div>
         <div style="display:flex;gap:4px;flex-shrink:0">
           <button class="btn btn-outline btn-sm" onclick="editDecision(${i})">Edit</button>
@@ -361,9 +361,9 @@ function renderGovernance(){
     changeReqs.map((c,i)=>`
       <div class="cr-row">
         <div class="cr-id">CR-${String(c.id).padStart(3,'0')}</div>
-        <div class="cr-title">${c.title}<div style="font-size:.62rem;color:var(--mist)">${c.project} · ${c.type}</div></div>
-        <div><span class="cr-impact cr-${c.impact[0].toLowerCase()}">${c.impact}</span></div>
-        <span class="badge ${c.status==='Pending'?'badge-risk':c.status==='Approved'?'badge-on':'badge-off'}">${c.status}</span>
+        <div class="cr-title">${esc(c.title)}<div style="font-size:.62rem;color:var(--mist)">${esc(c.project)} · ${esc(c.type)}</div></div>
+        <div><span class="cr-impact cr-${esc(String(c.impact)[0].toLowerCase())}">${esc(c.impact)}</span></div>
+        <span class="badge ${c.status==='Pending'?'badge-risk':c.status==='Approved'?'badge-on':'badge-off'}">${esc(c.status)}</span>
         <div style="display:flex;gap:3px;flex-shrink:0;flex-wrap:wrap">
           ${c.status==='Pending'?`<button class="btn btn-sm" style="background:#dcfce7;color:#166534;border:none" onclick="setCRStatus(${i},'Approved')">✓</button><button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="setCRStatus(${i},'Rejected')">✗</button>`:''}
           <button class="btn btn-outline btn-sm" onclick="editCR(${i})">Edit</button>
@@ -380,7 +380,7 @@ function renderGovernance(){
     const d=new Date(now.getTime()+e.days*86400000);
     return `<div class="gov-cal-item">
       <div class="cal-date-box"><div class="cal-day">${d.getDate()}</div><div class="cal-mon">${MONTHS[d.getMonth()]}</div></div>
-      <div class="cal-body"><div class="cal-title">${e.title}</div><div class="cal-sub">${e.sub}</div></div>
+      <div class="cal-body"><div class="cal-title">${esc(e.title)}</div><div class="cal-sub">${esc(e.sub)}</div></div>
       <div style="display:flex;gap:3px;flex-shrink:0">
         <button class="btn btn-outline btn-sm" onclick="openCalModal(${i})">Edit</button>
         <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="deleteCalEvent(${i})">Del</button>
@@ -402,14 +402,14 @@ function renderProjects(){
   });
   document.getElementById('projects-tbody').innerHTML=list.map(p=>{const gi=projects.indexOf(p);return `
     <tr class="proj-row" onclick="openProjectDetail(${gi})" title="Open project workspace">
-      <td><strong>${p.name}</strong><br><small style="color:var(--mist);font-size:.63rem">${p.desc||''}</small></td>
-      <td style="font-size:.7rem">${p.type}</td>
+      <td><strong>${esc(p.name)}</strong><br><small style="color:var(--mist);font-size:.63rem">${esc(p.desc||'')}</small></td>
+      <td style="font-size:.7rem">${esc(p.type)}</td>
       <td>${badgeHTML(p.status)}</td>
       <td><div class="prog-wrap" style="width:70px"><div class="prog-fill" style="width:${p.progress}%"></div></div> <small class="num" style="font-size:.6rem;color:var(--mist)">${p.progress}%</small></td>
       <td class="num" style="font-size:.73rem;white-space:nowrap">${CFG.currency}${(p.budget/1000).toFixed(0)}k</td>
       <td style="white-space:nowrap;font-size:.7rem">${fmt(p.start)}</td>
       <td style="white-space:nowrap;font-size:.7rem">${fmt(p.end)}</td>
-      <td style="font-size:.7rem">${p.pm}</td>
+      <td style="font-size:.7rem">${esc(p.pm)}</td>
       <td style="white-space:nowrap" onclick="event.stopPropagation()">
         <button class="btn btn-primary btn-sm" onclick="openProjectDetail(${gi})">Open</button>
         <button class="btn btn-outline btn-sm" style="margin-left:4px" onclick="editProject(${gi})">Edit</button>
@@ -439,11 +439,11 @@ function renderGantt(){
     const bw=Math.max(1,be-bs);
     const cls=['','gold','green','blue','purple','',''][i%7];
     return `<div class="gantt-row">
-      <div class="gantt-row-label">${p.name}<small>${p.pm}</small></div>
+      <div class="gantt-row-label">${esc(p.name)}<small>${esc(p.pm)}</small></div>
       <div class="gantt-timeline">
         <div class="today-line" style="left:${todayPct}%"></div>
         ${bs<100&&be>0?`<div class="gantt-bar ${cls}" data-idx="${i}" title="Drag to reschedule · drag edges to resize" style="left:${bs}%;width:${bw}%;animation:fadeUp .4s ${.05*i+.1}s var(--ease) both">
-          <span class="gantt-handle l"></span><span class="gantt-bar-label">${p.progress}% · ${p.name}</span><span class="gantt-handle r"></span></div>`:''}
+          <span class="gantt-handle l"></span><span class="gantt-bar-label">${p.progress}% · ${esc(p.name)}</span><span class="gantt-handle r"></span></div>`:''}
       </div>
     </div>`;
   }).join('')||'<div style="padding:24px;text-align:center;color:var(--mist)">Add projects to see timeline</div>';
@@ -508,14 +508,14 @@ function renderMilestones(){
     const ms=[...autoMs,...custom].sort((a,b)=>new Date(a.date)-new Date(b.date));
     return `<div>
       <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:.85rem;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
-        ${p.name}
-        <button class="btn btn-outline btn-sm" onclick="openMilestoneModal();document.getElementById('ml-project').value='${p.name.replace(/'/g,"\\'")}'" style="font-size:.6rem;padding:3px 7px">+ Add</button>
+        ${esc(p.name)}
+        <button class="btn btn-outline btn-sm" onclick="openMilestoneModal();document.getElementById('ml-project').value='${jsInAttr(p.name)}'" style="font-size:.6rem;padding:3px 7px">+ Add</button>
       </div>
       ${ms.map((m,mi)=>`
         <div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;${mi<ms.length-1?'border-left:2px solid var(--border);margin-left:5px;padding-left:16px':'padding-left:18px'}">
           <div style="width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-left:${mi<ms.length-1?'-17px':'-1px'};margin-top:3px;background:${m.done?'#22c55e':now>new Date(m.date)?'var(--accent)':'var(--border)'};border:2px solid var(--card);cursor:${m.auto?'default':'pointer'};transition:background .3s" ${!m.auto?`onclick="toggleMilestoneDone(${m.realIdx})" title="Toggle done"`:''} ></div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:.76rem;font-weight:500">${m.name}${m.auto?'':` <span style="font-size:.58rem;color:var(--mist)">(custom)</span>`}</div>
+            <div style="font-size:.76rem;font-weight:500">${esc(m.name)}${m.auto?'':` <span style="font-size:.58rem;color:var(--mist)">(custom)</span>`}</div>
             <div style="font-size:.62rem;color:var(--mist)">${new Date(m.date).toLocaleDateString(CFG.dateFmt,{month:'short',day:'numeric',year:'numeric'})}</div>
           </div>
           ${!m.auto?`<div style="display:flex;gap:3px;flex-shrink:0"><button class="btn btn-outline btn-sm" style="font-size:.58rem;padding:2px 5px" onclick="openMilestoneModal(${m.realIdx})">Edit</button><button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none;font-size:.58rem;padding:2px 5px" onclick="deleteMilestone(${m.realIdx})">Del</button></div>`:''}
@@ -527,7 +527,7 @@ function renderMilestones(){
   const orphans=customMilestones.filter(m=>!projects.find(p=>p.name===m.project));
   const orphanBlock=orphans.length?`<div>
     <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:.85rem;margin-bottom:14px">Other Milestones</div>
-    ${orphans.map((m,i)=>{const ri=customMilestones.indexOf(m);return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><div style="width:10px;height:10px;border-radius:50%;background:${m.done?'#22c55e':'var(--border)'}"></div><div style="flex:1;font-size:.75rem">${m.name}<div style="font-size:.6rem;color:var(--mist)">${m.project}·${new Date(m.date).toLocaleDateString(CFG.dateFmt,{month:'short',day:'numeric'})}</div></div><button class="btn btn-outline btn-sm" onclick="openMilestoneModal(${ri})">Edit</button><button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="deleteMilestone(${ri})">Del</button></div>`;}).join('')}
+    ${orphans.map((m,i)=>{const ri=customMilestones.indexOf(m);return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><div style="width:10px;height:10px;border-radius:50%;background:${m.done?'#22c55e':'var(--border)'}"></div><div style="flex:1;font-size:.75rem">${esc(m.name)}<div style="font-size:.6rem;color:var(--mist)">${esc(m.project)}·${new Date(m.date).toLocaleDateString(CFG.dateFmt,{month:'short',day:'numeric'})}</div></div><button class="btn btn-outline btn-sm" onclick="openMilestoneModal(${ri})">Edit</button><button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="deleteMilestone(${ri})">Del</button></div>`;}).join('')}
   </div>`:'';
   content.innerHTML=projectBlocks+(orphanBlock||'');
 }
@@ -538,14 +538,14 @@ function renderMilestones(){
 function renderRisks(){
   document.getElementById('risks-tbody').innerHTML=risks.map((r,i)=>`
     <tr>
-      <td><strong>${r.title}</strong></td>
-      <td style="font-size:.7rem">${r.project}</td>
-      <td style="font-size:.7rem">${r.cat}</td>
+      <td><strong>${esc(r.title)}</strong></td>
+      <td style="font-size:.7rem">${esc(r.project)}</td>
+      <td style="font-size:.7rem">${esc(r.cat)}</td>
       <td>${sevBadge(r.sev)}</td>
       <td>${probBadge(r.prob)}</td>
-      <td style="font-size:.7rem">${r.owner}</td>
-      <td style="font-size:.66rem;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.mit}">${r.mit}</td>
-      <td><span class="badge ${r.status==='Open'?'badge-risk':'badge-done'}">${r.status}</span></td>
+      <td style="font-size:.7rem">${esc(r.owner)}</td>
+      <td style="font-size:.66rem;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(r.mit)}">${esc(r.mit)}</td>
+      <td><span class="badge ${r.status==='Open'?'badge-risk':'badge-done'}">${esc(r.status)}</span></td>
       <td style="white-space:nowrap">
         <button class="btn btn-sm" style="background:${r.status==='Open'?'#dcfce7':'#fee2e2'};color:${r.status==='Open'?'#166534':'#991b1b'};border:none;border-radius:6px" onclick="toggleRisk(${i})">${r.status==='Open'?'Mitigate':'Reopen'}</button>
         <button class="btn btn-outline btn-sm" style="margin-left:3px" onclick="editRisk(${i})">Edit</button>
@@ -582,7 +582,7 @@ function renderBudget(){
     const pct=p.budget>0?Math.min(100,Math.round((p.spent/p.budget)*100)):0;
     const over=p.spent>p.budget;
     return `<div class="budget-row">
-      <div class="budget-name">${p.name}<br><small style="color:var(--mist);font-size:.6rem">${p.type}</small></div>
+      <div class="budget-name">${esc(p.name)}<br><small style="color:var(--mist);font-size:.6rem">${esc(p.type)}</small></div>
       <div><div class="util-label"><span>${cur}${(p.spent/1000).toFixed(0)}k / ${cur}${(p.budget/1000).toFixed(0)}k</span><span style="color:${over?'#ef4444':'var(--mist)'}">${pct}%</span></div>
       <div class="util-bar"><div class="util-fill" style="width:${pct}%;background:${over?'#ef4444':pct>80?'#f59e0b':'#22c55e'}"></div></div></div>
       <div style="font-size:.7rem;color:var(--mist);white-space:nowrap">${cur}${(p.budget/1000).toFixed(0)}k</div>
@@ -619,15 +619,15 @@ function renderResources(){
       const proj=projects.filter(p=>p.name===r.project||p.pm===r.name);
       return `<div class="resource-card">
         <div class="rc-head">
-          <div class="avatar" style="background:${AVT_COLORS[ci%AVT_COLORS.length]}">${initials}</div>
-          <div style="flex:1;min-width:0"><div class="rc-name">${r.name}</div><div class="rc-role">${r.role}</div>${r.dept?`<div style="font-size:.58rem;color:var(--mist)">${r.dept}</div>`:''}</div>
+          <div class="avatar" style="background:${AVT_COLORS[ci%AVT_COLORS.length]}">${esc(initials)}</div>
+          <div style="flex:1;min-width:0"><div class="rc-name">${esc(r.name)}</div><div class="rc-role">${esc(r.role)}</div>${r.dept?`<div style="font-size:.58rem;color:var(--mist)">${esc(r.dept)}</div>`:''}</div>
           <div style="display:flex;gap:4px;flex-shrink:0">
             <button class="btn btn-outline btn-sm" style="font-size:.6rem;padding:3px 7px" onclick="openResourceModal(${i})">Edit</button>
             <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none;font-size:.6rem;padding:3px 7px" onclick="deleteResource(${i})">Del</button>
           </div>
         </div>
-        ${r.email?`<div style="font-size:.62rem;color:var(--mist);margin-bottom:6px">✉ ${r.email}</div>`:''}
-        ${proj.map(p=>`<div style="font-size:.66rem;padding:4px 0;border-bottom:1px solid var(--border)">${p.name} <span style="color:var(--mist)">${p.progress}%</span></div>`).join('')}
+        ${r.email?`<div style="font-size:.62rem;color:var(--mist);margin-bottom:6px">✉ ${esc(r.email)}</div>`:''}
+        ${proj.map(p=>`<div style="font-size:.66rem;padding:4px 0;border-bottom:1px solid var(--border)">${esc(p.name)} <span style="color:var(--mist)">${p.progress}%</span></div>`).join('')}
         <div class="util-bar-wrap">
           <div class="util-label"><span>Utilization</span><span>${util}%</span></div>
           <div class="util-bar"><div class="util-fill" style="width:${util}%;background:${util>85?'#ef4444':util>65?'#f59e0b':'#22c55e'}"></div></div>
@@ -638,12 +638,12 @@ function renderResources(){
       const util=Math.min(100,pm.count*20+Math.floor((pm.name.length*13)%20));
       return `<div class="resource-card">
         <div class="rc-head">
-          <div class="avatar" style="background:${AVT_COLORS[ci%AVT_COLORS.length]}">${initials}</div>
-          <div style="flex:1;min-width:0"><div class="rc-name">${pm.name}</div><div class="rc-role">${[...pm.types][0]||'Project Manager'}</div></div>
-          <button class="btn btn-outline btn-sm" style="font-size:.6rem;padding:3px 7px;flex-shrink:0" onclick="openResourceModal();document.getElementById('res-name').value='${pm.name.replace(/'/g,"\\'")}'" title="Save as explicit resource">Save</button>
+          <div class="avatar" style="background:${AVT_COLORS[ci%AVT_COLORS.length]}">${esc(initials)}</div>
+          <div style="flex:1;min-width:0"><div class="rc-name">${esc(pm.name)}</div><div class="rc-role">${esc([...pm.types][0]||'Project Manager')}</div></div>
+          <button class="btn btn-outline btn-sm" style="font-size:.6rem;padding:3px 7px;flex-shrink:0" onclick="openResourceModal();document.getElementById('res-name').value='${jsInAttr(pm.name)}'" title="Save as explicit resource">Save</button>
         </div>
         <div style="font-size:.7rem;color:var(--mist);margin-bottom:8px">${pm.count} project${pm.count!==1?'s':''} (auto-derived)</div>
-        ${pm.projects.map(p=>`<div style="font-size:.66rem;padding:4px 0;border-bottom:1px solid var(--border)">${p.name} <span style="color:var(--mist)">${p.progress}%</span></div>`).join('')}
+        ${pm.projects.map(p=>`<div style="font-size:.66rem;padding:4px 0;border-bottom:1px solid var(--border)">${esc(p.name)} <span style="color:var(--mist)">${p.progress}%</span></div>`).join('')}
         <div class="util-bar-wrap">
           <div class="util-label"><span>Utilization</span><span>${util}%</span></div>
           <div class="util-bar"><div class="util-fill" style="width:${util}%;background:${util>85?'#ef4444':util>65?'#f59e0b':'#22c55e'}"></div></div>
@@ -659,8 +659,8 @@ function renderResources(){
 function openProjectDetail(i){
   pdProject=projects[i];if(!pdProject)return;
   document.getElementById('pd-title').textContent=pdProject.name;
-  document.getElementById('pd-badges').innerHTML=badgeHTML(pdProject.status)+` <span class="badge badge-info">${pdProject.type}</span>`;
-  document.getElementById('pd-meta').innerHTML=`<span>PM <b>${pdProject.pm}</b></span><span>Start <b>${fmt(pdProject.start)}</b></span><span>End <b>${fmt(pdProject.end)}</b></span><span>Progress <b>${pdProject.progress}%</b></span><span>Budget <b>${CFG.currency}${(pdProject.budget/1000).toFixed(0)}k</b></span>`;
+  document.getElementById('pd-badges').innerHTML=badgeHTML(pdProject.status)+` <span class="badge badge-info">${esc(pdProject.type)}</span>`;
+  document.getElementById('pd-meta').innerHTML=`<span>PM <b>${esc(pdProject.pm)}</b></span><span>Start <b>${fmt(pdProject.start)}</b></span><span>End <b>${fmt(pdProject.end)}</b></span><span>Progress <b>${pdProject.progress}%</b></span><span>Budget <b>${CFG.currency}${(pdProject.budget/1000).toFixed(0)}k</b></span>`;
   // reset to first tab
   document.querySelectorAll('#modal-pd .tab').forEach((t,ti)=>t.classList.toggle('active',ti===0));
   document.querySelectorAll('#modal-pd .tab-pane').forEach((p,pi)=>p.classList.toggle('active',pi===0));
@@ -685,7 +685,7 @@ function renderPdTimeline(){
     const col=s.status==='Done'?'var(--green)':s.status==='Blocked'?'var(--red)':s.status==='In Progress'?'var(--accent)':'var(--silver)';
     const si=subtasks.indexOf(s);
     return `<div class="st-row">
-      <div class="st-name">${s.name}<small>${s.owner||'—'} · ${s.status}</small></div>
+      <div class="st-name">${esc(s.name)}<small>${esc(s.owner||'—')} · ${esc(s.status)}</small></div>
       <div class="st-track"><div class="st-bar" style="left:${left}%;width:${w}%;background:${col}">${s.prog}%</div></div>
       <div style="display:flex;gap:4px;white-space:nowrap"><span class="num" style="font-size:.62rem;color:var(--mist);align-self:center">${CFG.currency}${((s.cost||0)/1000).toFixed(0)}k</span>
         <button class="btn btn-outline btn-sm" onclick="openSubtask(${si})">Edit</button>
@@ -706,7 +706,7 @@ function renderPdRisks(){
   const rs=risks.map((r,i)=>({r,i})).filter(o=>o.r.project===pdProject.name);
   document.getElementById('pd-risks').innerHTML=`
     <div class="table-wrap" style="box-shadow:none"><table style="min-width:0"><thead><tr><th>Risk</th><th>Category</th><th>Severity</th><th>Probability</th><th>Owner</th><th>Status</th><th></th></tr></thead><tbody>
-    ${rs.map(({r,i})=>`<tr><td><strong>${r.title}</strong><br><small style="color:var(--mist);font-size:.6rem">${r.mit||''}</small></td><td style="font-size:.7rem">${r.cat}</td><td>${sevBadge(r.sev)}</td><td>${probBadge(r.prob)}</td><td style="font-size:.7rem">${r.owner}</td><td><span class="badge ${r.status==='Open'?'badge-risk':'badge-done'}">${r.status}</span></td>
+    ${rs.map(({r,i})=>`<tr><td><strong>${esc(r.title)}</strong><br><small style="color:var(--mist);font-size:.6rem">${esc(r.mit||'')}</small></td><td style="font-size:.7rem">${esc(r.cat)}</td><td>${sevBadge(r.sev)}</td><td>${probBadge(r.prob)}</td><td style="font-size:.7rem">${esc(r.owner)}</td><td><span class="badge ${r.status==='Open'?'badge-risk':'badge-done'}">${esc(r.status)}</span></td>
       <td style="white-space:nowrap"><button class="btn btn-sm" style="background:${r.status==='Open'?'#dcfce7':'#fee2e2'};color:${r.status==='Open'?'#166534':'#991b1b'};border:none" onclick="toggleRisk(${i});renderPdRisks()">${r.status==='Open'?'Mitigate':'Reopen'}</button>
       <button class="btn btn-outline btn-sm" style="margin-left:3px" onclick="closeModal('modal-pd');editRisk(${i})">Edit</button></td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--mist);padding:18px">No risks logged for this project</td></tr>'}
     </tbody></table></div>
@@ -715,7 +715,7 @@ function renderPdRisks(){
 function pdAddRisk(){
   const name=pdProject.name;closeModal('modal-pd');
   editRiskIdx=-1;
-  document.getElementById('r-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('');
+  document.getElementById('r-project').innerHTML=projects.map(p=>`<option>${esc(p.name)}</option>`).join('');
   ['r-title','r-owner','r-mit'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('r-sev').value='Medium';document.getElementById('r-prob').value='Medium';document.getElementById('r-cat').value='Technical';
   document.querySelector('#modal-risk h2').textContent='Add Risk';
@@ -746,7 +746,7 @@ function renderPdResources(){
   document.getElementById('pd-resources').innerHTML=`
     <div class="resource-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
     ${team.map((r,ci)=>{const init=r.name.split(' ').map(n=>n[0]).join('');const util=r.util==null?Math.min(100,(pdProject.progress||0)):r.util;
-      return `<div class="resource-card"><div class="rc-head"><div class="avatar" style="background:${AVT_COLORS[ci%AVT_COLORS.length]}">${init}</div><div style="flex:1;min-width:0"><div class="rc-name">${r.name}</div><div class="rc-role">${r.role||'Contributor'}${r.derived?' · auto':''}</div></div></div>
+      return `<div class="resource-card"><div class="rc-head"><div class="avatar" style="background:${AVT_COLORS[ci%AVT_COLORS.length]}">${esc(init)}</div><div style="flex:1;min-width:0"><div class="rc-name">${esc(r.name)}</div><div class="rc-role">${esc(r.role||'Contributor')}${r.derived?' · auto':''}</div></div></div>
       <div class="util-bar-wrap"><div class="util-label"><span>Utilization</span><span class="num">${util}%</span></div><div class="util-bar"><div class="util-fill" style="width:${util}%;background:${util>85?'var(--red)':util>65?'#f59e0b':'var(--green)'}"></div></div></div></div>`;}).join('')||'<p style="color:var(--mist);font-size:.74rem">No resources assigned.</p>'}
     </div>
     <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="pdAddResource()">+ Assign Resource</button>`;
@@ -795,9 +795,9 @@ function renderImprovement(){
       <h4>${stage}<span>${cards.length}</span></h4>
       ${cards.map(({it,i})=>{const ic={High:'pill-hi',Medium:'pill-md',Low:'pill-lo'}[it.impact];
         return `<div class="cip-card" draggable="true" ondragstart="cipDrag(event,${i})" ondragend="cipEnd(event)" onclick="openCip(${i})">
-          <div class="cip-t">${it.title}</div>
-          <div class="cip-m"><span class="pill ${ic}">${it.impact} impact</span><span>${it.cat}</span></div>
-          <div class="cip-m"><span>${it.project}</span>·<span>${it.owner||'—'}</span></div>
+          <div class="cip-t">${esc(it.title)}</div>
+          <div class="cip-m"><span class="pill ${ic}">${esc(it.impact)} impact</span><span>${esc(it.cat)}</span></div>
+          <div class="cip-m"><span>${esc(it.project)}</span>·<span>${esc(it.owner||'—')}</span></div>
         </div>`;}).join('')}
     </div>`;
   }).join('');
@@ -814,7 +814,7 @@ function cipDrop(e,stage){e.preventDefault();e.currentTarget.classList.remove('d
 function openCip(i){
   editCipIdx=i==null?-1:i;const it=i==null?{}:improvements[i];
   document.getElementById('cip-h').textContent=i==null?'New Improvement Initiative':'Edit Initiative';
-  document.getElementById('cip-project').innerHTML=['Portfolio-wide',...projects.map(p=>p.name)].map(n=>`<option>${n}</option>`).join('');
+  document.getElementById('cip-project').innerHTML=['Portfolio-wide',...projects.map(p=>p.name)].map(n=>`<option>${esc(n)}</option>`).join('');
   document.getElementById('cip-title').value=it.title||'';
   document.getElementById('cip-project').value=it.project||'Portfolio-wide';
   document.getElementById('cip-cat').value=it.cat||'Process';
@@ -854,7 +854,7 @@ function countUp(){
 function openAddModal(){
   if(currentPanel==='risks'){
     editRiskIdx=-1;
-    document.getElementById('r-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('')||'<option>No projects</option>';
+    document.getElementById('r-project').innerHTML=projects.map(p=>`<option>${esc(p.name)}</option>`).join('')||'<option>No projects</option>';
     document.querySelector('#modal-risk h2').textContent='Add Risk';
     ['r-title','r-owner','r-mit'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('r-sev').value='Medium';document.getElementById('r-prob').value='Medium';document.getElementById('r-cat').value='Technical';
@@ -886,7 +886,7 @@ function openAddModal(){
 function openMilestoneModal(i){
   editResIdx=i===undefined?-1:i;
   const m=i!==undefined?customMilestones[i]:{};
-  document.getElementById('ml-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('')||'<option>No projects</option>';
+  document.getElementById('ml-project').innerHTML=projects.map(p=>`<option>${esc(p.name)}</option>`).join('')||'<option>No projects</option>';
   document.getElementById('ml-name').value=m.name||'';
   document.getElementById('ml-date').value=m.date||new Date().toISOString().slice(0,10);
   document.getElementById('ml-project').value=m.project||'';
@@ -912,7 +912,7 @@ function openResourceModal(i){
   document.getElementById('res-dept').value=r.dept||'';
   document.getElementById('res-email').value=r.email||'';
   document.getElementById('res-util').value=r.util||50;
-  document.getElementById('res-project').innerHTML=(['(None)',...projects.map(p=>p.name)]).map(n=>`<option>${n}</option>`).join('');
+  document.getElementById('res-project').innerHTML=(['(None)',...projects.map(p=>p.name)]).map(n=>`<option>${esc(n)}</option>`).join('');
   document.getElementById('res-project').value=r.project||'(None)';
   document.querySelector('#modal-resource h2').textContent=i!==undefined?'Edit Resource':'Add Resource';
   document.getElementById('modal-resource').classList.add('open');
@@ -929,7 +929,7 @@ function deleteResource(i){if(!confirm(`Remove "${resources[i].name}"?`))return;
 function openBudgetModal(i){
   const p=i!==undefined?projects[i]:{};
   editIdx=i===undefined?-1:i;
-  document.getElementById('bud-project').innerHTML=projects.map((pr,pi)=>`<option value="${pi}">${pr.name}</option>`).join('');
+  document.getElementById('bud-project').innerHTML=projects.map((pr,pi)=>`<option value="${pi}">${esc(pr.name)}</option>`).join('');
   if(i!==undefined) document.getElementById('bud-project').value=i;
   document.getElementById('bud-budget').value=p.budget||0;
   document.getElementById('bud-spent').value=p.spent||0;
@@ -945,7 +945,7 @@ function saveBudget(){
 
 function editRisk(i){
   editRiskIdx=i;const r=risks[i];
-  document.getElementById('r-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('')||'<option>No projects</option>';
+  document.getElementById('r-project').innerHTML=projects.map(p=>`<option>${esc(p.name)}</option>`).join('')||'<option>No projects</option>';
   document.getElementById('r-title').value=r.title;
   document.getElementById('r-project').value=r.project;
   document.getElementById('r-cat').value=r.cat;
@@ -960,7 +960,7 @@ function deleteRisk(i){if(!confirm(`Delete risk "${risks[i].title}"?`))return;ri
 
 function editDecision(i){
   editDecIdx=i;const d=decisions[i];
-  document.getElementById('d-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('')||'<option>General</option>';
+  document.getElementById('d-project').innerHTML=projects.map(p=>`<option>${esc(p.name)}</option>`).join('')||'<option>General</option>';
   document.getElementById('d-title').value=d.title;
   document.getElementById('d-project').value=d.project;
   document.getElementById('d-type').value=d.type;
@@ -975,7 +975,7 @@ function deleteDecision(i){if(!confirm('Delete this decision?'))return;decisions
 
 function editCR(i){
   editCRIdx=i;const c=changeReqs[i];
-  document.getElementById('cr-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('')||'<option>General</option>';
+  document.getElementById('cr-project').innerHTML=projects.map(p=>`<option>${esc(p.name)}</option>`).join('')||'<option>General</option>';
   document.getElementById('cr-title').value=c.title;
   document.getElementById('cr-project').value=c.project;
   document.getElementById('cr-type').value=c.type;
@@ -1015,7 +1015,7 @@ function inlineEdit(el, onSave){
 }
 function openDecisionModal(){
   editDecIdx=-1;
-  document.getElementById('d-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('')||'<option>General</option>';
+  document.getElementById('d-project').innerHTML=projects.map(p=>`<option>${esc(p.name)}</option>`).join('')||'<option>General</option>';
   document.getElementById('d-date').value=new Date().toISOString().slice(0,10);
   ['d-title','d-maker','d-rationale'].forEach(id=>document.getElementById(id).value='');
   document.querySelector('#modal-decision h2').textContent='Log Decision';
@@ -1024,7 +1024,7 @@ function openDecisionModal(){
 
 function openCRModal(){
   editCRIdx=-1;
-  document.getElementById('cr-project').innerHTML=projects.map(p=>`<option>${p.name}</option>`).join('')||'<option>General</option>';
+  document.getElementById('cr-project').innerHTML=projects.map(p=>`<option>${esc(p.name)}</option>`).join('')||'<option>General</option>';
   document.getElementById('cr-date').value=new Date().toISOString().slice(0,10);
   ['cr-title','cr-by','cr-desc'].forEach(id=>document.getElementById(id).value='');
   document.querySelector('#modal-cr h2').textContent='Submit Change Request';
@@ -1101,11 +1101,19 @@ function toggleRisk(i){risks[i].status=risks[i].status==='Open'?'Mitigated':'Ope
 // ════════════════════════════════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════════════════════════════════
-function badgeHTML(s){const m={'On Track':'badge-on','At Risk':'badge-risk','Off Track':'badge-off','Planning':'badge-plan','Completed':'badge-done'};return`<span class="badge ${m[s]||'badge-plan'}">${s}</span>`;}
-function sevBadge(s){const m={Critical:'badge-off',High:'badge-off',Medium:'badge-risk',Low:'badge-done'};return`<span class="badge ${m[s]||'badge-plan'}">${s}</span>`;}
-function probBadge(s){const m={High:'badge-risk',Medium:'badge-plan',Low:'badge-done'};return`<span class="badge ${m[s]||'badge-plan'}">${s}</span>`;}
+function badgeHTML(s){const m={'On Track':'badge-on','At Risk':'badge-risk','Off Track':'badge-off','Planning':'badge-plan','Completed':'badge-done'};return`<span class="badge ${m[s]||'badge-plan'}">${esc(s)}</span>`;}
+function sevBadge(s){const m={Critical:'badge-off',High:'badge-off',Medium:'badge-risk',Low:'badge-done'};return`<span class="badge ${m[s]||'badge-plan'}">${esc(s)}</span>`;}
+function probBadge(s){const m={High:'badge-risk',Medium:'badge-plan',Low:'badge-done'};return`<span class="badge ${m[s]||'badge-plan'}">${esc(s)}</span>`;}
 function fmt(d){if(!d)return'—';try{const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString(CFG.dateFmt,{month:'short',day:'numeric',year:'numeric'});}catch{return d;}}
 function noData(cols){return`<tr><td colspan="${cols}" style="text-align:center;color:var(--mist);padding:24px">No data</td></tr>`;}
+
+// ── OUTPUT ESCAPING (XSS guard) ──────────────────────────────────────
+// Every user- or spreadsheet-supplied value is rendered via innerHTML, so it
+// must be escaped at the point of interpolation. esc() covers text and quoted
+// attribute contexts; jsInAttr() covers a value placed inside a single-quoted
+// JS string that itself lives inside a double-quoted HTML attribute (onclick=…).
+function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function jsInAttr(v){return String(v??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 
@@ -1165,7 +1173,7 @@ function renderLifecycle(){
     const cls=(done||i<active)?'done':i===active?'current':'upcoming';
     const mark=(done||i<active)?'✓':(i+1);
     return `<div class="lc-step ${cls}"><span class="lc-marker">${mark}</span><div class="lc-body"><div class="lc-name">${s.name}</div><div class="lc-sub">${s.sub}</div></div></div>`;
-  }).join('')+`<div class="lc-foot">${label} · ${prog}%</div>`;
+  }).join('')+`<div class="lc-foot">${esc(label)} · ${prog}%</div>`;
 }
 
 document.querySelectorAll('.modal-bg').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
@@ -1197,11 +1205,6 @@ const GH_REPO='kneuralabs/pmo', GH_FILE='DATA.xlsx';
 const AS_INTERVAL_MS=120000; // 2 minutes
 let ghSha=null,ghData=[],ghHeaders=[],editDataIdx=-1;
 let asTimer=null,asNext=0;
-
-function _ghToken(){
-  const raw=localStorage.getItem('gh-token');
-  return raw?atob(raw):null;
-}
 
 function renderDataSync(){
   const verified=localStorage.getItem('gh-verified')==='1';
@@ -1348,8 +1351,7 @@ function _renderDataTable(){
     </div>`;
     return;
   }
-  // Escape cell values for safe innerHTML insertion
-  const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Cell values escaped via the shared esc() helper for safe innerHTML insertion
   const thCells=ghHeaders.map(h=>`<th>${esc(h)}</th>`).join('');
   const bodyRows=ghData.map((r,i)=>`<tr>
     ${ghHeaders.map(h=>`<td style="font-size:.73rem">${esc(r[h])}</td>`).join('')}
@@ -1391,7 +1393,7 @@ function openDataRowModal(i){
   document.getElementById('data-modal-h').textContent=i!==undefined?'Edit Row':'Add Row';
   // Use numeric field IDs to avoid CSS.escape issues with special-char headers
   document.getElementById('data-form-fields').innerHTML=ghHeaders.length
-    ?ghHeaders.map((h,idx)=>`<div><label>${String(h).replace(/</g,'&lt;')}</label><input id="df-${idx}" value="${String(row[h]??'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}"></div>`).join('')
+    ?ghHeaders.map((h,idx)=>`<div><label>${esc(h)}</label><input id="df-${idx}" value="${esc(row[h])}"></div>`).join('')
     :'<p style="color:var(--mist);font-size:.78rem">Set up columns first.</p>';
   document.getElementById('modal-data').classList.add('open');
 }
